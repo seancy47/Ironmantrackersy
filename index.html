@@ -215,7 +215,7 @@
   .chart-filter { display: flex; gap: 5px; }
   .chart-filter-btn { font-size: 10px; padding: 4px 10px; border-radius: 20px; border: 1px solid var(--border); background: none; color: var(--faint); cursor: pointer; font-family: inherit; font-weight: 700; }
   .chart-filter-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
-  .chart-canvas-wrap { position: relative; height: 160px; }
+  .chart-canvas-wrap { position: relative; }
   .chart-empty { text-align: center; padding: 40px 0; color: var(--faint); font-size: 13px; }
   .chart-legend { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 10px; }
   .chart-legend-item { display: flex; align-items: center; gap: 5px; font-size: 10px; color: var(--muted); }
@@ -318,20 +318,14 @@
           <button class="chart-filter-btn" data-action="chartMetric" data-val="sessions">sessions</button>
         </div>
       </div>
-      <!-- Time range selector -->
       <div style="display:flex;gap:5px;margin-bottom:12px;overflow-x:auto">
         <button class="chart-filter-btn active" id="range-week" data-action="chartRange" data-val="week">Weekly</button>
         <button class="chart-filter-btn" id="range-month" data-action="chartRange" data-val="month">Monthly</button>
         <button class="chart-filter-btn" id="range-6m" data-action="chartRange" data-val="6m">6 Months</button>
         <button class="chart-filter-btn" id="range-1y" data-action="chartRange" data-val="1y">1 Year</button>
       </div>
-      <div class="chart-canvas-wrap"><canvas id="progress-chart"></canvas></div>
-      <div class="chart-legend">
-        <div class="chart-legend-item"><div class="chart-legend-dot" style="background:#a78bfa"></div>Run</div>
-        <div class="chart-legend-item"><div class="chart-legend-dot" style="background:#c4b5fd"></div>Bike</div>
-        <div class="chart-legend-item"><div class="chart-legend-dot" style="background:#818cf8"></div>Swim</div>
-        <div class="chart-legend-item"><div class="chart-legend-dot" style="background:#e879f9"></div>Brick</div>
-      </div>
+      <!-- chart-content is fully managed by renderChart() -->
+      <div id="chart-content"></div>
     </div>
 
     <div class="pad">

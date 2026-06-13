@@ -1379,25 +1379,19 @@ function _buildBuckets() {
 }
 
 function renderChart() {
-  const wrap = document.querySelector(".chart-canvas-wrap");
-  if (!wrap) return;
+  const container = document.getElementById("chart-content");
+  if (!container) return;
 
   const { buckets } = _buildBuckets();
   const maxBuckets = { week:10, month:6, "6m":6, "1y":12 }[chartRange] || 10;
   const labels = Object.keys(buckets).sort().slice(-maxBuckets);
 
-  // ── Summary mini-cards (volume trend + sport breakdown) ──
+  // ── Summary stats ──
   const allBucketVals = labels.map(l => buckets[l]);
   const totalSessions = allBucketVals.reduce((s,b)=>s+(b.sessions||0),0);
   const totalKm = allBucketVals.reduce((s,b)=>s+b.run+b.bike+b.swim+b.brick, 0);
   const totalMins = allBucketVals.reduce((s,b)=>s+b.durRun+b.durBike+b.durSwim+b.durBrick, 0);
-  const sportTotals = CHART_SPORTS.map(sp => ({
-    ...sp,
-    km: allBucketVals.reduce((s,b)=>s+(b[sp.key]||0),0),
-    sessions: allBucketVals.reduce((s,b)=>s+(b.sessions||0),0),
-  })).filter(sp => sp.km > 0 || totalSessions > 0);
 
-  // Volume trend: is latest bucket higher or lower than previous?
   const trend = labels.length >= 2
     ? (() => {
         const prev = buckets[labels[labels.length-2]];
@@ -1411,45 +1405,40 @@ function renderChart() {
     : "—";
   const trendColor = trend === "↑" ? "#34d399" : trend === "↓" ? "#f472b6" : "#6d5b9e";
 
-  // Summary row
-  const summaryHtml = `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px">
-    <div style="background:#1a1040;border:1px solid #2a1a52;border-radius:12px;padding:10px 12px;text-align:center">
-      <div style="font-size:9px;color:#4a3878;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:4px">Sessions</div>
-      <div style="font-size:22px;font-weight:900;color:#c4b5fd;letter-spacing:-0.5px">${totalSessions}</div>
-      <div style="font-size:10px;color:#6d5b9e;margin-top:2px">logged</div>
-    </div>
-    <div style="background:#1a1040;border:1px solid #2a1a52;border-radius:12px;padding:10px 12px;text-align:center">
-      <div style="font-size:9px;color:#4a3878;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:4px">Distance</div>
-      <div style="font-size:22px;font-weight:900;color:#c4b5fd;letter-spacing:-0.5px">${totalKm.toFixed(0)}<span style="font-size:12px;font-weight:600;color:#6d5b9e">km</span></div>
-      <div style="font-size:10px;color:${trendColor};margin-top:2px;font-weight:700">${trend} vs prev</div>
-    </div>
-    <div style="background:#1a1040;border:1px solid #2a1a52;border-radius:12px;padding:10px 12px;text-align:center">
-      <div style="font-size:9px;color:#4a3878;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:4px">Time</div>
-      <div style="font-size:22px;font-weight:900;color:#c4b5fd;letter-spacing:-0.5px">${totalMins>0?Math.floor(totalMins/60):"—"}<span style="font-size:12px;font-weight:600;color:#6d5b9e">${totalMins>0?"h":""}</span></div>
-      <div style="font-size:10px;color:#6d5b9e;margin-top:2px">total</div>
-    </div>
-  </div>
-  <div style="display:flex;gap:6px;margin-bottom:14px">
-    ${CHART_SPORTS.map(sp => {
-      const km = allBucketVals.reduce((s,b)=>s+(b[sp.key]||0),0);
-      if (km === 0) return "";
-      const pct = totalKm > 0 ? Math.round((km/totalKm)*100) : 0;
-      return `<div style="flex:1;background:#130c24;border:1px solid ${sp.color}33;border-top:3px solid ${sp.color};border-radius:10px;padding:8px 6px;text-align:center">
-        <div style="font-size:15px">${sp.icon}</div>
-        <div style="font-size:13px;font-weight:800;color:${sp.color};margin:2px 0">${km.toFixed(0)}<span style="font-size:9px;font-weight:600;color:#6d5b9e">km</span></div>
-        <div style="font-size:9px;color:#4a3878;font-weight:700">${pct}%</div>
-      </div>`;
-    }).join("")}
-  </div>`;
+  const sportTiles = CHART_SPORTS.map(sp => {
+    const km = allBucketVals.reduce((s,b)=>s+(b[sp.key]||0),0);
+    if (km === 0) return "";
+    const pct = totalKm > 0 ? Math.round((km/totalKm)*100) : 0;
+    return `<div style="flex:1;background:#130c24;border:1px solid ${sp.color}33;border-top:3px solid ${sp.color};border-radius:10px;padding:8px 6px;text-align:center">
+      <div style="font-size:15px">${sp.icon}</div>
+      <div style="font-size:13px;font-weight:800;color:${sp.color};margin:2px 0">${km.toFixed(0)}<span style="font-size:9px;font-weight:600;color:#6d5b9e">km</span></div>
+      <div style="font-size:9px;color:#4a3878;font-weight:700">${pct}%</div>
+    </div>`;
+  }).join("");
 
   if (!labels.length) {
-    wrap.innerHTML = `<div class="chart-empty">Log some workouts to see your progress chart.</div>`;
+    container.innerHTML = `
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px">
+        <div style="background:#1a1040;border:1px solid #2a1a52;border-radius:12px;padding:10px 12px;text-align:center">
+          <div style="font-size:9px;color:#4a3878;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:4px">Sessions</div>
+          <div style="font-size:22px;font-weight:900;color:#c4b5fd">0</div>
+          <div style="font-size:10px;color:#6d5b9e;margin-top:2px">logged</div>
+        </div>
+        <div style="background:#1a1040;border:1px solid #2a1a52;border-radius:12px;padding:10px 12px;text-align:center">
+          <div style="font-size:9px;color:#4a3878;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:4px">Distance</div>
+          <div style="font-size:22px;font-weight:900;color:#c4b5fd">—</div>
+        </div>
+        <div style="background:#1a1040;border:1px solid #2a1a52;border-radius:12px;padding:10px 12px;text-align:center">
+          <div style="font-size:9px;color:#4a3878;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:4px">Time</div>
+          <div style="font-size:22px;font-weight:900;color:#c4b5fd">—</div>
+        </div>
+      </div>
+      <div class="chart-empty">Log some workouts to see your progress chart.</div>`;
     return;
   }
 
-  // ── Bar chart — side-by-side, not stacked ──
+  // ── Build datasets ──
   const metricLabel = { distance:"km", duration:"hrs", sessions:"sessions" }[chartMetric] || "km";
-
   const datasets = CHART_SPORTS.map(sp => ({
     label: `${sp.icon} ${sp.label}`,
     backgroundColor: sp.bg,
@@ -1468,12 +1457,34 @@ function renderChart() {
     })
   })).filter(ds => ds.data.some(v => v > 0));
 
-  // Inject summary above chart, canvas below
-  wrap.innerHTML = summaryHtml + `<canvas id="progress-chart" style="height:160px"></canvas>`;
+  // ── Render everything into container in one shot — no overlap possible ──
+  if (chartInstance) { try { chartInstance.destroy(); } catch(e) {} chartInstance = null; }
+
+  container.innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px">
+      <div style="background:#1a1040;border:1px solid #2a1a52;border-radius:12px;padding:10px 12px;text-align:center">
+        <div style="font-size:9px;color:#4a3878;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:4px">Sessions</div>
+        <div style="font-size:22px;font-weight:900;color:#c4b5fd;letter-spacing:-0.5px">${totalSessions}</div>
+        <div style="font-size:10px;color:#6d5b9e;margin-top:2px">logged</div>
+      </div>
+      <div style="background:#1a1040;border:1px solid #2a1a52;border-radius:12px;padding:10px 12px;text-align:center">
+        <div style="font-size:9px;color:#4a3878;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:4px">Distance</div>
+        <div style="font-size:22px;font-weight:900;color:#c4b5fd;letter-spacing:-0.5px">${totalKm.toFixed(0)}<span style="font-size:12px;font-weight:600;color:#6d5b9e">km</span></div>
+        <div style="font-size:10px;color:${trendColor};margin-top:2px;font-weight:700">${trend} vs prev</div>
+      </div>
+      <div style="background:#1a1040;border:1px solid #2a1a52;border-radius:12px;padding:10px 12px;text-align:center">
+        <div style="font-size:9px;color:#4a3878;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:4px">Time</div>
+        <div style="font-size:22px;font-weight:900;color:#c4b5fd;letter-spacing:-0.5px">${totalMins>0?Math.floor(totalMins/60):"—"}<span style="font-size:12px;font-weight:600;color:#6d5b9e">${totalMins>0?"h":""}</span></div>
+        <div style="font-size:10px;color:#6d5b9e;margin-top:2px">total</div>
+      </div>
+    </div>
+    ${sportTiles ? `<div style="display:flex;gap:6px;margin-bottom:14px">${sportTiles}</div>` : ""}
+    <div style="position:relative;height:180px;width:100%">
+      <canvas id="progress-chart"></canvas>
+    </div>`;
+
   const newCanvas = document.getElementById("progress-chart");
   const newCtx = newCanvas.getContext("2d");
-
-  if (chartInstance) { try { chartInstance.destroy(); } catch(e) {} chartInstance = null; }
 
   const drawFn = () => _drawChart(newCanvas, newCtx, labels, datasets, metricLabel);
   if (typeof Chart === "undefined") {
