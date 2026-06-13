@@ -956,25 +956,25 @@ function closeLog() { document.getElementById("log-screen").classList.remove("op
 
 // --- HISTORY RENDER ---
 function renderHistory() {
-  // Build activity list from all completed logged workouts across all weeks
   const logs = getLogs();
   const activities = [];
+  const fmtDate = d => { try { return new Date(d+"T12:00:00").toLocaleDateString("en-GB",{weekday:"short",day:"numeric",month:"short"}); } catch(e) { return d; }};
+  const fmtMonth = m => { try { return new Date(m+"-01T12:00:00").toLocaleDateString("en-GB",{month:"long",year:"numeric"}); } catch(e) { return m; }};
+  const FEELINGS = ["😴 Tough","😐 OK","🙂 Good","😄 Great","🔥 Crushed it"];
 
+  // ── 1. Plan logged workouts ──
   Object.entries(logs).forEach(([key, log]) => {
     if (!log?.completed) return;
     const m = key.match(/^C(\d+)-(\d+)-(\d+)$/);
     if (!m) return;
     const [, cn, wi, di] = m.map(Number);
-    const week = PLAN.weeks[wi];
-    if (!week) return;
-    const day = week.days[di];
-    if (!day || day.type === "rest") return;
+    const week = PLAN.weeks[wi]; if (!week) return;
+    const day = week.days[di]; if (!day || day.type === "rest") return;
 
     const actType = log.activityType || day.type;
     const cfg = TYPE[actType] || TYPE.run;
     const isBrick = actType === "brick";
 
-    // Calculate distance — use logged value, fall back to plan target
     let distKm = 0;
     if (isBrick) {
       distKm = parseFloat(log.bikeDistance||0) + parseFloat(log.runDistance||0);
@@ -985,7 +985,6 @@ function renderHistory() {
     }
     const durMins = parseFloat(log.duration||0);
 
-    // Derive a real date from cycle start + week offset + day offset
     const cycleStartStr = localStorage.getItem("dt_cycle");
     let date = "—";
     if (cycleStartStr) {
@@ -996,35 +995,64 @@ function renderHistory() {
       date = d.toISOString().slice(0, 10);
     }
 
-    activities.push({ key, wi, di, cn, day, log, actType, cfg, distKm, durMins, date });
+    activities.push({ source:"plan", key, wi, di, cn, day, log, actType, cfg, distKm, durMins, date, elevM: 0 });
   });
 
-  // Sort newest first
-  activities.sort((a, b) => b.date.localeCompare(a.date));
+  // ── 2. Strava imported workouts ──
+  const stravaImports = getStravaImports();
+  stravaImports.forEach(a => {
+    const cfg = TYPE[a.type] || TYPE.run;
+    activities.push({
+      source: "strava",
+      id: a.id,
+      name: a.name,
+      actType: a.type,
+      cfg,
+      distKm: a.distance_km || 0,
+      durMins: a.duration_mins || 0,
+      elevM: a.elevation_m || 0,
+      date: a.date || "—",
+      // these aren't plan-linked so leave plan fields null
+      day: null, log: null, wi: null, di: null, cn: null,
+    });
+  });
 
-  // Stats
+  // ── 3. Deduplicate: if a Strava activity falls on the same date as a plan
+  //    log of the same type, prefer the plan log (it has more detail) ──
+  const planDateTypes = new Set(
+    activities.filter(a => a.source === "plan").map(a => `${a.date}:${a.actType}`)
+  );
+  const merged = activities.filter(a =>
+    a.source === "plan" || !planDateTypes.has(`${a.date}:${a.actType}`)
+  );
+
+  // Sort newest first
+  merged.sort((a, b) => b.date.localeCompare(a.date));
+
+  // ── 4. Stats (across both sources) ──
   let totalKm = 0, totalMins = 0, runKm = 0, bikeKm = 0, swimKm = 0;
   const typeCounts = {};
-  activities.forEach(a => {
+  merged.forEach(a => {
     totalKm += a.distKm;
-    totalMins += a.durMins; // only real logged duration — no estimates
+    totalMins += a.durMins;
     if (a.actType === "run") runKm += a.distKm;
-    if (a.actType === "bike" || a.actType === "brick") bikeKm += parseFloat(a.log?.bikeDistance||a.distKm||0);
+    if (a.actType === "bike" || a.actType === "brick") bikeKm += a.source === "plan" ? parseFloat(a.log?.bikeDistance||a.distKm||0) : a.distKm;
     if (a.actType === "swim") swimKm += a.distKm;
     typeCounts[a.actType] = (typeCounts[a.actType]||0) + 1;
   });
   const hrs = Math.floor(totalMins/60), mins2 = Math.round(totalMins%60);
 
-  document.getElementById("hist-stats").innerHTML = activities.length === 0
+  const stravaCount = stravaImports.length;
+  document.getElementById("hist-stats").innerHTML = merged.length === 0
     ? `<div class="stat-card" style="grid-column:1/-1;text-align:center;padding:24px">
         <div style="font-size:32px;margin-bottom:8px">🏊🚴🏃</div>
-        <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:4px">No workouts logged yet</div>
-        <div style="font-size:12px;color:var(--dim)">Head to Today or Plan to log your first session</div>
+        <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:4px">No workouts yet</div>
+        <div style="font-size:12px;color:var(--dim)">Import from Strava below or log sessions in Plan</div>
       </div>`
     : `<div class="stat-card">
-        <div class="stat-value">${activities.length}</div>
+        <div class="stat-value">${merged.length}</div>
         <div class="stat-label">Workouts</div>
-        <div class="stat-sub">logged in app</div>
+        <div class="stat-sub">${stravaCount > 0 ? `${stravaCount} from Strava` : "logged in app"}</div>
       </div>
       <div class="stat-card">
         <div class="stat-value">${totalKm.toFixed(0)}<span style="font-size:16px;font-weight:600;color:var(--dim)"> km</span></div>
@@ -1038,7 +1066,7 @@ function renderHistory() {
       </div>
       <div class="stat-card">
         <div class="stat-value">${swimKm > 0 ? swimKm.toFixed(1) : "—"}<span style="font-size:16px;font-weight:600;color:var(--dim)">${swimKm > 0 ? " km" : ""}</span></div>
-        <div class="stat-label">Swim distance</div>
+        <div class="stat-label">Swim</div>
         <div class="stat-sub">total in water</div>
       </div>`;
 
@@ -1053,65 +1081,83 @@ function renderHistory() {
     </div>`;
   }).join("");
 
-  if (activities.length === 0) {
+  // Render strava import bar
+  renderStravaImportBar();
+
+  if (merged.length === 0) {
     document.getElementById("hist-month-list").innerHTML = "";
+    setTimeout(renderChart, 60);
     return;
   }
 
-  // Group by month
+  // ── 5. Group by month and render ──
   const byMonth = {};
-  activities.forEach(a => {
+  merged.forEach(a => {
     const month = a.date.slice(0, 7);
     if (!byMonth[month]) byMonth[month] = [];
     byMonth[month].push(a);
   });
 
   const months = Object.keys(byMonth).sort((a,b) => b.localeCompare(a));
-  const fmtDate = d => { try { return new Date(d+"T12:00:00").toLocaleDateString("en-GB",{weekday:"short",day:"numeric",month:"short"}); } catch(e) { return d; }};
-  const fmtMonth = m => { try { return new Date(m+"-01T12:00:00").toLocaleDateString("en-GB",{month:"long",year:"numeric"}); } catch(e) { return m; }};
-  const FEELINGS = ["😴 Tough","😐 OK","🙂 Good","😄 Great","🔥 Crushed it"];
-
   let html = "";
+
   months.forEach(month => {
     const acts = byMonth[month];
     const monthKm = acts.reduce((s,a)=>s+a.distKm,0);
     html += `<div style="margin-bottom:24px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
         <div class="section-title" style="margin-bottom:0">${fmtMonth(month)}</div>
-        <div style="font-size:11px;color:var(--dim)">${acts.length} sessions · ${monthKm.toFixed(0)} km</div>
+        <div style="font-size:11px;color:var(--dim)">${acts.length} sessions · ${monthKm.toFixed(1)} km</div>
       </div>`;
 
     acts.forEach(a => {
-      const { cfg, distKm, durMins, date, actType, log } = a;
-      const isBrick = actType === "brick";
+      const { cfg, distKm, durMins, date, actType } = a;
       const isSwim = actType === "swim";
+      const isBrick = actType === "brick";
       const h = Math.floor(durMins/60), mm = Math.round(durMins%60);
       const durStr = durMins > 0 ? (h > 0 ? `${h}h ${mm}m` : `${Math.round(durMins)}m`) : "—";
-      // Distance: use logged value, fall back to plan target, show metres for swim
-      const displayKm = distKm > 0 ? distKm : (a.day.targetDistance || 0);
-      let distStr = "—";
-      if (displayKm > 0) {
-        if (isSwim && displayKm < 1) distStr = `${(displayKm*1000).toFixed(0)}m`;
-        else distStr = `${displayKm.toFixed(1)} km`;
-      }
-      const feeling = a.log?.feeling !== undefined ? FEELINGS[a.log.feeling] : "";
-      const metaParts = [fmtDate(date)];
-      if (isBrick && log) metaParts.push(`Bike ${parseFloat(log.bikeDistance||0).toFixed(1)}km · Run ${parseFloat(log.runDistance||0).toFixed(1)}km`);
-      metaParts.push(`Week ${a.wi+1}`);
 
-      html += `<div class="hist-entry" onclick="openLog(${a.wi},${a.di},${a.cn})">
-        <div class="hist-icon" style="background:${cfg.color}22;border-radius:10px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">${cfg.icon}</div>
-        <div class="hist-main">
-          <div class="hist-label">${a.day.label}</div>
-          <div class="hist-meta">${metaParts.join(" · ")}</div>
-          ${feeling ? `<div style="font-size:11px;margin-top:2px">${feeling}</div>` : ""}
-          ${a.log?.notes ? `<div style="font-size:11px;color:var(--faint);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${a.log.notes}</div>` : ""}
-        </div>
-        <div class="hist-right">
-          <div class="hist-dist" style="color:${cfg.color}">${distStr}</div>
-          <div class="hist-dur">${durStr}</div>
-        </div>
-      </div>`;
+      let distStr = "—";
+      if (distKm > 0) {
+        distStr = isSwim && distKm < 1 ? `${(distKm*1000).toFixed(0)}m` : `${distKm.toFixed(1)} km`;
+      }
+
+      if (a.source === "strava") {
+        // Strava entry — no plan link, no feeling, show elevation if available
+        const elevStr = a.elevM > 0 ? ` · ↑${a.elevM}m` : "";
+        html += `<div class="hist-entry">
+          <div class="hist-icon" style="background:${cfg.color}22;border-radius:10px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">${cfg.icon}</div>
+          <div class="hist-main">
+            <div class="hist-label">${a.name}</div>
+            <div class="hist-meta">${fmtDate(date)}${elevStr}</div>
+            <div style="font-size:10px;font-weight:700;color:#fc4c02;margin-top:2px;letter-spacing:0.04em">STRAVA</div>
+          </div>
+          <div class="hist-right">
+            <div class="hist-dist" style="color:${cfg.color}">${distStr}</div>
+            <div class="hist-dur">${durStr}</div>
+          </div>
+        </div>`;
+      } else {
+        // Plan logged entry
+        const feeling = a.log?.feeling !== undefined ? FEELINGS[a.log.feeling] : "";
+        const metaParts = [fmtDate(date)];
+        if (isBrick && a.log) metaParts.push(`Bike ${parseFloat(a.log.bikeDistance||0).toFixed(1)}km · Run ${parseFloat(a.log.runDistance||0).toFixed(1)}km`);
+        metaParts.push(`Week ${a.wi+1}`);
+
+        html += `<div class="hist-entry" onclick="openLog(${a.wi},${a.di},${a.cn})">
+          <div class="hist-icon" style="background:${cfg.color}22;border-radius:10px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">${cfg.icon}</div>
+          <div class="hist-main">
+            <div class="hist-label">${a.day.label}</div>
+            <div class="hist-meta">${metaParts.join(" · ")}</div>
+            ${feeling ? `<div style="font-size:11px;margin-top:2px">${feeling}</div>` : ""}
+            ${a.log?.notes ? `<div style="font-size:11px;color:var(--faint);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${a.log.notes}</div>` : ""}
+          </div>
+          <div class="hist-right">
+            <div class="hist-dist" style="color:${cfg.color}">${distStr}</div>
+            <div class="hist-dur">${durStr}</div>
+          </div>
+        </div>`;
+      }
     });
 
     html += `</div>`;
@@ -1119,7 +1165,6 @@ function renderHistory() {
 
   document.getElementById("hist-month-list").innerHTML = html;
   setTimeout(renderChart, 60);
-
 }
 
 
@@ -1152,6 +1197,8 @@ function attachDelegatedHandlers() {
     const val = el.dataset.val;
 
     if (action === 'supaSync')       { supaSync(); }
+    else if (action === 'stravaImport')   { fetchStravaForHistory(); }
+    else if (action === 'stravaClear')    { clearStravaImports(); }
     else if (action === 'closeLog')  { closeLog(); }
     else if (action === 'deleteLog') { deleteLog(); }
     else if (action === 'chartMetric')  { setChartMetric(val, el); }
@@ -1353,6 +1400,7 @@ function _buildBuckets() {
   const cycleStart = new Date(cycleStartStr);
 
   const dayData = {};
+  // Plan logged workouts
   Object.entries(logs).forEach(([key, log]) => {
     if (!log?.completed) return;
     const m = key.match(/^C(\d+)-(\d+)-(\d+)$/);
@@ -1365,7 +1413,6 @@ function _buildBuckets() {
     const dateStr = d.toISOString().slice(0,10);
     const actType = log.activityType || day.type;
     const isBrick = actType === "brick";
-    // Use logged distance, fall back to plan target distance
     let dist = 0;
     if (isBrick) {
       dist = parseFloat(log.bikeDistance||0) + parseFloat(log.runDistance||0);
@@ -1380,6 +1427,23 @@ function _buildBuckets() {
     const durKey = "dur"+actType[0].toUpperCase()+actType.slice(1);
     dayData[dateStr][durKey] = (dayData[dateStr][durKey]||0) + dur;
     dayData[dateStr].sessions++;
+  });
+
+  // Strava imported workouts — only add if no plan log exists for same date+type
+  const planDateTypes = new Set(
+    Object.keys(dayData).flatMap(date =>
+      Object.keys(dayData[date]).filter(k => !k.startsWith("dur") && k !== "sessions" && dayData[date][k] > 0).map(k => `${date}:${k}`)
+    )
+  );
+  getStravaImports().forEach(a => {
+    if (!a.date) return;
+    if (planDateTypes.has(`${a.date}:${a.type}`)) return; // plan log takes priority
+    const actType = a.type;
+    if (!dayData[a.date]) dayData[a.date] = { run:0, bike:0, swim:0, brick:0, durRun:0, durBike:0, durSwim:0, durBrick:0, sessions:0 };
+    dayData[a.date][actType] = (dayData[a.date][actType]||0) + (a.distance_km||0);
+    const durKey = "dur"+actType[0].toUpperCase()+actType.slice(1);
+    dayData[a.date][durKey] = (dayData[a.date][durKey]||0) + (a.duration_mins||0);
+    dayData[a.date].sessions++;
   });
 
   const buckets = {};
@@ -1721,4 +1785,142 @@ function exportLogs() {
   const a = document.createElement("a");
   a.href = url; a.download = "ironman-logs.json"; a.click();
   URL.revokeObjectURL(url);
+}
+
+// ─────────────────────────────────────────────
+// STRAVA IMPORT FOR HISTORY
+// ─────────────────────────────────────────────
+
+// Separate localStorage key — never touches plan logs
+function getStravaImports() { try { return JSON.parse(localStorage.getItem("strava_imports")||"[]"); } catch { return []; } }
+function saveStravaImports(arr) { localStorage.setItem("strava_imports", JSON.stringify(arr)); }
+function clearStravaImports() {
+  if (!confirm("Remove all imported Strava activities from history?")) return;
+  saveStravaImports([]);
+  renderStravaImportBar();
+  renderHistory();
+}
+
+let stravaImporting = false;
+
+function renderStravaImportBar() {
+  const el = document.getElementById("strava-import-bar");
+  if (!el) return;
+  const imports = getStravaImports();
+  const count = imports.length;
+  const lastSync = localStorage.getItem("strava_import_date");
+  const lastStr = lastSync ? new Date(lastSync).toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"}) : null;
+
+  el.innerHTML = `<div class="strava-import-bar">
+    <div class="strava-import-row">
+      <div>
+        <div class="strava-logo">STRAVA</div>
+        <div class="strava-import-status">
+          ${stravaImporting ? "Importing activities..." :
+            count > 0 ? `${count} activities imported${lastStr ? " · Last sync "+lastStr : ""}` :
+            "Import your Strava history into this timeline"}
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        ${count > 0 ? `<button class="strava-import-btn" style="background:transparent;border:1px solid #fc4c0266;color:#fc4c02" data-action="stravaClear">Clear</button>` : ""}
+        <button class="strava-import-btn" ${stravaImporting?"disabled":""} data-action="stravaImport">
+          ${stravaImporting ? "Importing..." : count > 0 ? "Refresh" : "Import"}
+        </button>
+      </div>
+    </div>
+    ${stravaImporting ? `<div class="strava-import-progress"><div class="strava-import-track"><div class="strava-import-fill" id="strava-prog-fill" style="width:0%"></div></div><div class="strava-import-text" id="strava-prog-text">Connecting to Strava...</div></div>` : ""}
+  </div>`;
+}
+
+async function fetchStravaForHistory() {
+  if (stravaImporting) return;
+  stravaImporting = true;
+  renderStravaImportBar();
+
+  try {
+    // Step 1: fetch up to 200 recent activities via Claude + Strava MCP
+    const setProgress = (pct, msg) => {
+      const fill = document.getElementById("strava-prog-fill");
+      const text = document.getElementById("strava-prog-text");
+      if (fill) fill.style.width = pct + "%";
+      if (text) text.textContent = msg;
+    };
+
+    setProgress(10, "Connecting to Strava...");
+
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-6",
+        max_tokens: 4000,
+        system: `You are a fitness data assistant. Use the Strava MCP to fetch the user's activities.
+Fetch as many activities as possible going back 12 months.
+Return ONLY a JSON array, no markdown, no explanation, no backticks. Format:
+[{"id":"123","name":"Morning Run","type":"Run","distance_km":5.2,"duration_mins":28.5,"date":"2026-06-09","elevation_m":120}]
+Rules:
+- type must be one of: Run, Ride, Swim, VirtualRide
+- distance_km: meters converted to km, 2dp
+- duration_mins: elapsed_time seconds converted to decimal minutes, 2dp
+- date: YYYY-MM-DD format
+- elevation_m: total_elevation_gain in metres, integer, 0 if unknown
+- Include ALL activity types, no filtering
+- If no activities found, return []`,
+        messages: [{ role: "user", content: "Fetch all my Strava activities from the last 12 months. Return as JSON array only." }],
+        mcp_servers: [{ type: "url", url: "https://mcp.strava.com/mcp", name: "strava" }]
+      })
+    });
+
+    setProgress(60, "Processing activities...");
+
+    const data = await response.json();
+    const textBlock = data.content?.find(b => b.type === "text");
+    if (!textBlock?.text) throw new Error("No response from Strava");
+
+    const clean = textBlock.text.replace(/```json|```/g, "").trim();
+    const raw = JSON.parse(clean);
+    if (!Array.isArray(raw)) throw new Error("Invalid response format");
+
+    setProgress(80, `Processing ${raw.length} activities...`);
+
+    // Normalise and deduplicate by id
+    const existing = getStravaImports();
+    const existingIds = new Set(existing.map(a => String(a.id)));
+
+    const normalised = raw.map(a => ({
+      id: String(a.id || Math.random()),
+      name: a.name || "Strava Activity",
+      type: normaliseStravaType(a.type),
+      distance_km: parseFloat(a.distance_km) || 0,
+      duration_mins: parseFloat(a.duration_mins) || 0,
+      date: a.date || "",
+      elevation_m: parseInt(a.elevation_m) || 0,
+      source: "strava",
+    })).filter(a => a.date && !existingIds.has(a.id));
+
+    const merged = [...existing, ...normalised].sort((a,b) => b.date.localeCompare(a.date));
+    saveStravaImports(merged);
+    localStorage.setItem("strava_import_date", new Date().toISOString());
+
+    setProgress(100, `Imported ${normalised.length} new activities`);
+    await new Promise(r => setTimeout(r, 600));
+
+  } catch(e) {
+    console.error("Strava import failed:", e);
+    const text = document.getElementById("strava-prog-text");
+    if (text) text.textContent = "⚠ Import failed — " + (e.message || "check connection");
+    await new Promise(r => setTimeout(r, 2000));
+  }
+
+  stravaImporting = false;
+  renderStravaImportBar();
+  renderHistory();
+}
+
+function normaliseStravaType(raw) {
+  const t = (raw||"").toLowerCase();
+  if (t === "run" || t === "trailrun") return "run";
+  if (t === "ride" || t === "virtualride" || t === "mountainbikeride" || t === "gravelride") return "bike";
+  if (t === "swim") return "swim";
+  return "run"; // default
 }
