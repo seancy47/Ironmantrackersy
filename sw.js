@@ -1,6 +1,7 @@
-const CACHE = "ironman-v2";
+const CACHE = "ironman-v3";
 const ASSETS = [
-  "/ironmantracker/ironman-tracker.html",
+  "/ironmantracker/",
+  "/ironmantracker/index.html",
   "/ironmantracker/app.js",
   "/ironmantracker/manifest.json",
   "/ironmantracker/icon-192.png",

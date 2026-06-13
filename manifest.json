@@ -2,7 +2,7 @@
   "name": "Ironman Tracker",
   "short_name": "Ironman",
   "description": "44-week Ironman triathlon training tracker",
-  "start_url": "/ironmantracker/ironman-tracker.html",
+  "start_url": "/ironmantracker/",
   "scope": "/ironmantracker/",
   "display": "standalone",
   "background_color": "#0e0818",
