@@ -1834,10 +1834,12 @@ function handleStravaCsv(event) {
   reader.onload = e => {
     try {
       const text = e.target.result;
-      const lines = text.split("\n").filter(l => l.trim());
-      if (lines.length < 2) { alert("CSV appears empty."); return; }
 
-      const headers = parseCSVLine(lines[0]).map(h => h.trim());
+      // Parse CSV properly — handles quoted fields containing newlines (COROS notes etc.)
+      const rows = parseCSVRows(text);
+      if (rows.length < 2) { alert("CSV appears empty."); return; }
+
+      const headers = rows[0].map(h => h.trim());
 
       // Find columns by exact Strava header name
       const col = (...names) => {
@@ -1863,8 +1865,8 @@ function handleStravaCsv(event) {
       }
 
       const activities = [];
-      for (let i = 1; i < lines.length; i++) {
-        const cols = parseCSVLine(lines[i]);
+      for (let i = 1; i < rows.length; i++) {
+        const cols = rows[i];
         if (cols.length < 4) continue;
 
         const rawDate = cols[iDate]?.trim() || "";
@@ -1933,6 +1935,31 @@ function parseCSVLine(line) {
   }
   result.push(cur);
   return result;
+}
+
+// Parses full CSV text into array of row arrays, correctly handling
+// quoted fields that contain commas AND newlines (e.g. COROS training notes)
+function parseCSVRows(text) {
+  const rows = [];
+  let row = [], cur = "", inQuote = false;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    const next = text[i + 1];
+    if (inQuote) {
+      if (ch === '"' && next === '"') { cur += '"'; i++; }  // escaped quote ""
+      else if (ch === '"') { inQuote = false; }              // closing quote
+      else { cur += ch; }                                    // content incl. \n inside quotes
+    } else {
+      if (ch === '"') { inQuote = true; }
+      else if (ch === ',') { row.push(cur); cur = ""; }
+      else if (ch === '\n') { row.push(cur); cur = ""; if (row.some(c => c.trim())) rows.push(row); row = []; }
+      else if (ch === '\r') { /* skip */ }
+      else { cur += ch; }
+    }
+  }
+  // Last row
+  if (cur || row.length) { row.push(cur); if (row.some(c => c.trim())) rows.push(row); }
+  return rows;
 }
 
 function parseStravaDate(raw) {
