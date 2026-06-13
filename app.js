@@ -848,6 +848,10 @@ function buildLogForm(session, log, isReadOnly) {
     ${typePickerHtml}
     ${distanceHtml}
     ${durationHtml}
+    <div class="input-row">
+      <div class="input-group"><label class="input-label">Avg Heart Rate (bpm)</label><input type="number" id="avg-hr" placeholder="e.g. 154" value="${log?.avg_hr||""}" min="0" max="220"></div>
+      <div class="input-group"><label class="input-label">Max Heart Rate (bpm)</label><input type="number" id="max-hr" placeholder="e.g. 178" value="${log?.max_hr||""}" min="0" max="220"></div>
+    </div>
     <div class="input-group"><label class="input-label">How did it feel?</label><div class="feelings">${feelingsHtml}</div></div>
     <div class="input-group"><label class="input-label">Notes (optional)</label><textarea id="notes" placeholder="How did it go? Anything to remember...">${log?.notes||""}</textarea></div>
   </div>`;
@@ -869,7 +873,10 @@ function switchLogType(newType) {
   const runDist = document.getElementById("run-dist")?.value||"";
   const notes = document.getElementById("notes")?.value||"";
   const log = getLogs()[logKey(logState.cn, logState.wi, logState.di)] || null;
-  const patchedLog = {...log, duration: totalMins > 0 ? String(totalMins) : "", distance:dist, bikeDistance:bikeDist, runDistance:runDist, notes};
+  const patchedLog = {...log, duration: totalMins > 0 ? String(totalMins) : "", distance:dist, bikeDistance:bikeDist, runDistance:runDist, notes,
+    avg_hr: parseInt(document.getElementById("avg-hr")?.value||0)||0,
+    max_hr: parseInt(document.getElementById("max-hr")?.value||0)||0,
+  };
   logState.loggedType = newType;
 
   // Update session card header and screen background to match new type
@@ -933,6 +940,8 @@ function saveLog() {
     completed:true, activityType:loggedType, feeling:logState.feeling,
     notes:document.getElementById("notes")?.value||"",
     duration: totalMins > 0 ? String(totalMins) : "",
+    avg_hr: parseInt(document.getElementById("avg-hr")?.value||0)||0,
+    max_hr: parseInt(document.getElementById("max-hr")?.value||0)||0,
     distance:isBrick?null:(document.getElementById("distance")?.value||""),
     bikeDistance:isBrick?(document.getElementById("bike-dist")?.value||""):null,
     runDistance:isBrick?(document.getElementById("run-dist")?.value||""):null,
@@ -995,7 +1004,7 @@ function renderHistory() {
       date = d.toISOString().slice(0, 10);
     }
 
-    activities.push({ source:"plan", key, wi, di, cn, day, log, actType, cfg, distKm, durMins, date, elevM: 0 });
+    activities.push({ source:"plan", key, wi, di, cn, day, log, actType, cfg, distKm, durMins, date, elevM: 0, avg_hr: log?.avg_hr||0, max_hr: log?.max_hr||0 });
   });
 
   // ── 2. Strava imported workouts ──
@@ -1139,6 +1148,9 @@ function renderHistory() {
       } else {
         // Plan logged entry
         const feeling = a.log?.feeling !== undefined ? FEELINGS[a.log.feeling] : "";
+        const avgHR = a.log?.avg_hr || 0;
+        const maxHR = a.log?.max_hr || 0;
+        const hrStr = avgHR > 0 ? ` · ♥ ${avgHR}bpm avg${maxHR > 0 ? ` / ${maxHR} max` : ""}` : "";
         const metaParts = [fmtDate(date)];
         if (isBrick && a.log) metaParts.push(`Bike ${parseFloat(a.log.bikeDistance||0).toFixed(1)}km · Run ${parseFloat(a.log.runDistance||0).toFixed(1)}km`);
         metaParts.push(`Week ${a.wi+1}`);
@@ -1147,7 +1159,7 @@ function renderHistory() {
           <div class="hist-icon" style="background:${cfg.color}22;border-radius:10px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">${cfg.icon}</div>
           <div class="hist-main">
             <div class="hist-label">${a.day.label}</div>
-            <div class="hist-meta">${metaParts.join(" · ")}</div>
+            <div class="hist-meta">${metaParts.join(" · ")}${hrStr}</div>
             ${feeling ? `<div style="font-size:11px;margin-top:2px">${feeling}</div>` : ""}
             ${a.log?.notes ? `<div style="font-size:11px;color:var(--faint);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${a.log.notes}</div>` : ""}
           </div>
@@ -1417,10 +1429,12 @@ function _buildBuckets() {
       if (dist === 0) dist = day.targetDistance || 0;
     }
     const dur = parseFloat(log.duration||0);
+    const logAvgHR = parseInt(log.avg_hr||0);
     if (!dayData[dateStr]) dayData[dateStr] = { run:0, bike:0, swim:0, brick:0, durRun:0, durBike:0, durSwim:0, durBrick:0, sessions:0, hrSum:0, hrCount:0 };
     dayData[dateStr][actType] = (dayData[dateStr][actType]||0) + dist;
     const durKey = "dur"+actType[0].toUpperCase()+actType.slice(1);
     dayData[dateStr][durKey] = (dayData[dateStr][durKey]||0) + dur;
+    if (logAvgHR > 0) { dayData[dateStr].hrSum += logAvgHR; dayData[dateStr].hrCount++; }
     dayData[dateStr].sessions++;
   });
 
