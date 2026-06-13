@@ -378,15 +378,17 @@
   </div>
 
   <!-- Notifications screen -->
-  <div id="notif-screen" class="screen" id="chart-screen">
+  <div id="settings-screen" class="screen">
     <div class="page-header">
       <div>
-        <div style="font-size:26px;font-weight:900;letter-spacing:-0.5px;color:var(--text)">Reminders</div>
-        <div style="font-size:12px;color:var(--faint);margin-top:4px">Daily training notifications</div>
+        <div style="font-size:26px;font-weight:900;letter-spacing:-0.5px;color:var(--text)">Settings</div>
+        <div style="font-size:12px;color:var(--faint);margin-top:4px">App preferences &amp; reminders</div>
       </div>
     </div>
+
+    <!-- Notifications section -->
     <div class="notif-section">
-      <div class="notif-section-title">Push notifications</div>
+      <div class="notif-section-title">Notifications</div>
       <div class="notif-row">
         <div>
           <div class="notif-row-label">Daily reminder</div>
@@ -409,14 +411,67 @@
         <button class="notif-toggle on" id="notif-skip-rest" onclick="toggleSkipRest()"></button>
       </div>
       <div class="notif-status" id="notif-status"></div>
+      <button onclick="sendTestNotif()" style="width:100%;margin-top:12px;padding:11px;background:var(--card2);color:var(--accent-bright);border:1px solid var(--border2);border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">Send test notification</button>
     </div>
+
+    <!-- Plan section -->
     <div class="notif-section">
-      <div class="notif-section-title">Test</div>
-      <button onclick="sendTestNotif()" style="width:100%;padding:12px;background:var(--accent);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">Send test notification</button>
+      <div class="notif-section-title">Training Plan</div>
+      <div class="notif-row">
+        <div>
+          <div class="notif-row-label">Plan start date</div>
+          <div class="notif-row-sub" id="plan-start-display">Loading...</div>
+        </div>
+        <button onclick="showChangePlanStart()" style="font-size:12px;font-weight:700;color:var(--accent-bright);background:none;border:none;cursor:pointer;font-family:inherit;padding:4px 0">Change</button>
+      </div>
+      <div id="plan-start-picker" style="display:none;padding-top:12px">
+        <input type="date" id="plan-start-input" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-size:14px;font-family:inherit;outline:none">
+        <div style="display:flex;gap:8px;margin-top:8px">
+          <button onclick="savePlanStart()" style="flex:1;padding:10px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">Save</button>
+          <button onclick="document.getElementById('plan-start-picker').style.display='none'" style="flex:1;padding:10px;background:var(--card2);color:var(--muted);border:1px solid var(--border);border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">Cancel</button>
+        </div>
+      </div>
     </div>
+
+    <!-- Security section -->
+    <div class="notif-section">
+      <div class="notif-section-title">Security</div>
+      <div class="notif-row">
+        <div>
+          <div class="notif-row-label">PIN lock</div>
+          <div class="notif-row-sub">4-digit PIN protects your data</div>
+        </div>
+        <button onclick="pinReset()" style="font-size:12px;font-weight:700;color:var(--accent-bright);background:none;border:none;cursor:pointer;font-family:inherit;padding:4px 0">Reset PIN</button>
+      </div>
+    </div>
+
+    <!-- Data section -->
+    <div class="notif-section">
+      <div class="notif-section-title">Data</div>
+      <div class="notif-row">
+        <div>
+          <div class="notif-row-label">Sync now</div>
+          <div class="notif-row-sub">Pull latest data from cloud</div>
+        </div>
+        <button onclick="supaSync()" style="font-size:12px;font-weight:700;color:var(--accent-bright);background:none;border:none;cursor:pointer;font-family:inherit;padding:4px 0">Sync ⟳</button>
+      </div>
+      <div class="notif-row">
+        <div>
+          <div class="notif-row-label">Export logs</div>
+          <div class="notif-row-sub">Download your workout data as JSON</div>
+        </div>
+        <button onclick="exportLogs()" style="font-size:12px;font-weight:700;color:var(--accent-bright);background:none;border:none;cursor:pointer;font-family:inherit;padding:4px 0">Export</button>
+      </div>
+    </div>
+
+    <!-- How notifications work -->
     <div class="notif-section" style="font-size:12px;color:var(--faint);line-height:1.7">
-      <div class="notif-section-title">How it works</div>
-      Notifications are scheduled daily by your browser's service worker. They work even when the app is closed, as long as you've granted permission and the browser is running in the background. On iOS, you must first add the app to your home screen via Share → Add to Home Screen.
+      <div class="notif-section-title">About notifications</div>
+      Notifications are scheduled by your browser's service worker and work even when the app is closed. On iOS, add the app to your home screen first via Share → Add to Home Screen, then grant notification permission.
+    </div>
+
+    <div style="text-align:center;padding:20px 20px 60px;font-size:11px;color:var(--faint)">
+      Ironman Tracker · Built for Sean Young · North Vancouver
     </div>
   </div>
 
@@ -500,8 +555,8 @@
     <button class="tab" onclick="showTab('fuel',this)">
       <span class="tab-icon">⚡</span><span class="tab-label">Fuel</span>
     </button>
-    <button class="tab" onclick="showTab('notif',this)">
-      <span class="tab-icon">🔔</span><span class="tab-label">Alerts</span>
+    <button class="tab" onclick="showTab('settings',this)">
+      <span class="tab-icon">⚙️</span><span class="tab-label">Settings</span>
     </button>
   </div>
 </div>
@@ -1074,7 +1129,7 @@ function showTab(name, el) {
   if(name==="plan") renderPlan(activePlanWeek);
   if(name==="history") renderHistory();
   if(name==="fuel") fuelCalc();
-  if(name==="notif") initNotifScreen();
+  if(name==="settings") initSettingsScreen();
 }
 
 // --- TODAY ---
@@ -1834,13 +1889,55 @@ function renderChart() {
 let notifEnabled = false;
 let skipRest = true;
 
-function initNotifScreen() {
+function initSettingsScreen() {
   notifEnabled = localStorage.getItem('notif_enabled') === '1';
   skipRest = localStorage.getItem('notif_skip_rest') !== '0';
   const time = localStorage.getItem('notif_time') || '07:00';
   document.getElementById('notif-time').value = time;
   updateNotifToggles();
   updateNotifStatus();
+
+  // Plan start date display
+  const cs = getCycleStart();
+  const dateStr = cs.toLocaleDateString('en-GB', {weekday:'short', day:'numeric', month:'long', year:'numeric'});
+  const el = document.getElementById('plan-start-display');
+  if (el) el.textContent = `Week 1 started ${dateStr}`;
+
+  // Set date picker to current start
+  const inp = document.getElementById('plan-start-input');
+  if (inp) inp.value = cs.toISOString().slice(0,10);
+}
+
+function showChangePlanStart() {
+  const picker = document.getElementById('plan-start-picker');
+  picker.style.display = picker.style.display === 'none' ? 'block' : 'none';
+}
+
+function savePlanStart() {
+  const val = document.getElementById('plan-start-input').value;
+  if (!val) return;
+  const d = new Date(val + 'T00:00:00');
+  // Set to Monday of chosen week
+  const day = d.getDay();
+  d.setDate(d.getDate() - (day === 0 ? 6 : day - 1));
+  localStorage.setItem('dt_cycle', d.toISOString());
+  document.getElementById('plan-start-picker').style.display = 'none';
+  initSettingsScreen();
+  renderToday();
+  renderPlan(0);
+  alert('Plan start date updated. Week 1 now begins ' + d.toLocaleDateString('en-GB', {weekday:'short', day:'numeric', month:'long', year:'numeric'}));
+}
+
+function exportLogs() {
+  const logs = getLogs();
+  const data = JSON.stringify(logs, null, 2);
+  const blob = new Blob([data], {type: 'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'ironman-logs-' + new Date().toISOString().slice(0,10) + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 function updateNotifToggles() {
