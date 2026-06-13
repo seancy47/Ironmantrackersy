@@ -334,11 +334,13 @@
           <button class="chart-filter-btn" data-action="chartMetric" data-val="hr">avg HR</button>
         </div>
       </div>
-      <div style="display:flex;gap:5px;margin-bottom:12px;overflow-x:auto">
-        <button class="chart-filter-btn active" id="range-week" data-action="chartRange" data-val="week">Weekly</button>
-        <button class="chart-filter-btn" id="range-month" data-action="chartRange" data-val="month">Monthly</button>
-        <button class="chart-filter-btn" id="range-6m" data-action="chartRange" data-val="6m">6 Months</button>
-        <button class="chart-filter-btn" id="range-1y" data-action="chartRange" data-val="1y">1 Year</button>
+      <div style="display:flex;gap:5px;margin-bottom:12px;overflow-x:auto;padding-bottom:2px">
+        <button class="chart-filter-btn active" data-action="chartRange" data-val="1w">This Week</button>
+        <button class="chart-filter-btn" data-action="chartRange" data-val="2w">2 Weeks</button>
+        <button class="chart-filter-btn" data-action="chartRange" data-val="1m">1 Month</button>
+        <button class="chart-filter-btn" data-action="chartRange" data-val="3m">3 Months</button>
+        <button class="chart-filter-btn" data-action="chartRange" data-val="6m">6 Months</button>
+        <button class="chart-filter-btn" data-action="chartRange" data-val="1y">1 Year</button>
       </div>
       <!-- chart-content is fully managed by renderChart() -->
       <div id="chart-content"></div>

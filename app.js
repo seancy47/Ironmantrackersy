@@ -1553,7 +1553,23 @@ function renderChart() {
 
   // ── Summary stats ──
   const allBucketVals = rawLabels.map(l => buckets[l]);
-  const currentBucket = buckets[rawLabels[rawLabels.length - 1]] || {};
+  // For daily buckets (1w/2w), sum ALL buckets for the period cards
+  // For weekly/monthly buckets, show the most recent bucket as "current period"
+  const isDaily = rangeDays <= 14;
+  const currentBucket = isDaily
+    ? { // sum all days
+        run: allBucketVals.reduce((s,b)=>s+(b?.run||0),0),
+        bike: allBucketVals.reduce((s,b)=>s+(b?.bike||0),0),
+        swim: allBucketVals.reduce((s,b)=>s+(b?.swim||0),0),
+        brick: allBucketVals.reduce((s,b)=>s+(b?.brick||0),0),
+        durRun: allBucketVals.reduce((s,b)=>s+(b?.durRun||0),0),
+        durBike: allBucketVals.reduce((s,b)=>s+(b?.durBike||0),0),
+        durSwim: allBucketVals.reduce((s,b)=>s+(b?.durSwim||0),0),
+        durBrick: allBucketVals.reduce((s,b)=>s+(b?.durBrick||0),0),
+        sessions: allBucketVals.reduce((s,b)=>s+(b?.sessions||0),0),
+      }
+    : (buckets[rawLabels[rawLabels.length - 1]] || {});
+
   const rangeSessions = allBucketVals.reduce((s,b)=>s+(b?.sessions||0),0);
   const rangeKm       = allBucketVals.reduce((s,b)=>s+(b?.run||0)+(b?.bike||0)+(b?.swim||0)+(b?.brick||0), 0);
   const rangeMins     = allBucketVals.reduce((s,b)=>s+(b?.durRun||0)+(b?.durBike||0)+(b?.durSwim||0)+(b?.durBrick||0), 0);
@@ -1562,7 +1578,9 @@ function renderChart() {
   const curMins     = (currentBucket.durRun||0)+(currentBucket.durBike||0)+(currentBucket.durSwim||0)+(currentBucket.durBrick||0);
   const totalMins   = rangeMins;
 
-  const periodLabel = { "1w":"this week","2w":"this 2 weeks","1m":"this month","3m":"last 3 months","6m":"last 6 months","1y":"this year" }[chartRange] || "this period";
+  const periodLabel = { "1w":"this week","2w":"last 2 weeks","1m":"this month","3m":"last 3 months","6m":"last 6 months","1y":"this year" }[chartRange] || "this period";
+  // For daily view, totals ARE the period — don't show redundant "X total"
+  const showTotal = !isDaily && rangeSessions !== curSessions;
 
   const trend = rawLabels.length >= 2
     ? (() => {
@@ -1579,13 +1597,12 @@ function renderChart() {
 
   const sportTiles = CHART_SPORTS.map(sp => {
     const km = allBucketVals.reduce((s,b)=>s+(b?.[sp.key]||0),0);
-    const curKmSport = currentBucket[sp.key] || 0;
     if (km === 0) return "";
     const pct = rangeKm > 0 ? Math.round((km/rangeKm)*100) : 0;
     return `<div style="flex:1;background:#130c24;border:1px solid ${sp.color}33;border-top:3px solid ${sp.color};border-radius:10px;padding:8px 6px;text-align:center">
       <div style="font-size:15px">${sp.icon}</div>
-      <div style="font-size:13px;font-weight:800;color:${sp.color};margin:2px 0">${curKmSport.toFixed(1)}<span style="font-size:9px;font-weight:600;color:#6d5b9e">km</span></div>
-      <div style="font-size:9px;color:#4a3878;font-weight:700">${pct}% of total</div>
+      <div style="font-size:13px;font-weight:800;color:${sp.color};margin:2px 0">${km.toFixed(1)}<span style="font-size:9px;font-weight:600;color:#6d5b9e">km</span></div>
+      <div style="font-size:9px;color:#4a3878;font-weight:700">${pct}%</div>
     </div>`;
   }).join("");
 
@@ -1671,17 +1688,17 @@ function renderChart() {
       <div style="background:#1a1040;border:1px solid #2a1a52;border-radius:12px;padding:10px 12px;text-align:center">
         <div style="font-size:9px;color:#4a3878;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:4px">Sessions</div>
         <div style="font-size:22px;font-weight:900;color:#c4b5fd;letter-spacing:-0.5px">${curSessions}</div>
-        <div style="font-size:10px;color:#6d5b9e;margin-top:2px">${periodLabel} · ${rangeSessions} total</div>
+        <div style="font-size:10px;color:#6d5b9e;margin-top:2px">${periodLabel}${showTotal ? ` · ${rangeSessions} total` : ""}</div>
       </div>
       <div style="background:#1a1040;border:1px solid #2a1a52;border-radius:12px;padding:10px 12px;text-align:center">
         <div style="font-size:9px;color:#4a3878;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:4px">Distance</div>
         <div style="font-size:22px;font-weight:900;color:#c4b5fd;letter-spacing:-0.5px">${curKm.toFixed(0)}<span style="font-size:12px;font-weight:600;color:#6d5b9e">km</span></div>
-        <div style="font-size:10px;color:${trendColor};margin-top:2px;font-weight:700">${trend} · ${rangeKm.toFixed(0)}km total</div>
+        <div style="font-size:10px;color:${trendColor};margin-top:2px;font-weight:700">${trend}${showTotal ? ` · ${rangeKm.toFixed(0)}km total` : ""}</div>
       </div>
       <div style="background:#1a1040;border:1px solid #2a1a52;border-radius:12px;padding:10px 12px;text-align:center">
         <div style="font-size:9px;color:#4a3878;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:4px">Time</div>
         <div style="font-size:22px;font-weight:900;color:#c4b5fd;letter-spacing:-0.5px">${curMins>0?Math.floor(curMins/60):"—"}<span style="font-size:12px;font-weight:600;color:#6d5b9e">${curMins>0?"h":""}</span></div>
-        <div style="font-size:10px;color:#6d5b9e;margin-top:2px">${periodLabel}${rangeMins>0?" · "+Math.floor(rangeMins/60)+"h total":""}</div>
+        <div style="font-size:10px;color:#6d5b9e;margin-top:2px">${periodLabel}${showTotal && rangeMins>0 ? " · "+Math.floor(rangeMins/60)+"h total" : ""}</div>
       </div>
     </div>
     ${sportTiles ? `<div style="display:flex;gap:6px;margin-bottom:14px">${sportTiles}</div>` : ""}
