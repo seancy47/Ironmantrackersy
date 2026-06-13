@@ -1407,7 +1407,7 @@ function fuelCalc() {
 // ─────────────────────────────────────────────
 // CHART
 // ─────────────────────────────────────────────
-let chartMetric = "distance", chartRange = "week";
+let chartMetric = "distance", chartRange = "1w";
 let chartInstance = null;
 
 // Sport config for chart — distinct, high-contrast colours
@@ -1429,7 +1429,8 @@ function setChartRange(val, el) {
   chartRange = val;
   document.querySelectorAll(".chart-filter-btn[data-action='chartRange']").forEach(b => b.classList.remove("active"));
   el.classList.add("active");
-  document.getElementById("chart-range-label").textContent = { week:"Weekly", month:"Monthly", "6m":"6-Month", "1y":"Yearly" }[val] || "Weekly";
+  const labels = { "1w":"This Week", "2w":"2 Weeks", "1m":"1 Month", "3m":"3 Months", "6m":"6 Months", "1y":"1 Year" };
+  document.getElementById("chart-range-label").textContent = labels[val] || "This Week";
   renderChart();
 }
 
@@ -1489,16 +1490,36 @@ function _buildBuckets() {
     dayData[a.date].sessions++;
   });
 
+  // Determine date range cutoff and bucket size based on chartRange
+  const now = new Date();
+  now.setHours(23,59,59,999);
+  const rangeDays = { "1w":7, "2w":14, "1m":30, "3m":91, "6m":182, "1y":365 }[chartRange] || 7;
+  const cutoff = new Date(now); cutoff.setDate(cutoff.getDate() - rangeDays + 1); cutoff.setHours(0,0,0,0);
+  // For short ranges show daily buckets; for longer ranges show weekly; for 3m+ show monthly
+  const bucketSize = rangeDays <= 14 ? "day" : rangeDays <= 91 ? "week" : "month";
+
   const buckets = {};
-  Object.entries(dayData).forEach(([dateStr, d]) => {
-    const date = new Date(dateStr+"T12:00:00");
-    let key;
-    if (chartRange === "week") {
-      const diffDays = Math.floor((date - cycleStart) / 86400000);
-      key = `W${Math.floor(diffDays/7)+1}`;
+
+  // Helper to get bucket key for a date string
+  const getBucketKey = (dateStr) => {
+    const date = new Date(dateStr + "T12:00:00");
+    if (date < cutoff || date > now) return null; // outside range
+    if (bucketSize === "day") {
+      return dateStr; // e.g. "2026-06-13"
+    } else if (bucketSize === "week") {
+      // Week starting Monday
+      const d = new Date(date);
+      const day = d.getDay() === 0 ? 6 : d.getDay() - 1; // 0=Mon
+      d.setDate(d.getDate() - day);
+      return d.toISOString().slice(0,10);
     } else {
-      key = dateStr.slice(0,7);
+      return dateStr.slice(0,7); // "2026-06"
     }
+  };
+
+  Object.entries(dayData).forEach(([dateStr, d]) => {
+    const key = getBucketKey(dateStr);
+    if (!key) return;
     if (!buckets[key]) buckets[key] = { run:0, bike:0, swim:0, brick:0, durRun:0, durBike:0, durSwim:0, durBrick:0, sessions:0, hrSum:0, hrCount:0 };
     ["run","bike","swim","brick","sessions"].forEach(k => buckets[key][k] = (buckets[key][k]||0) + (d[k]||0));
     ["durRun","durBike","durSwim","durBrick"].forEach(k => buckets[key][k] = (buckets[key][k]||0) + (d[k]||0));
@@ -1514,21 +1535,41 @@ function renderChart() {
   if (!container) return;
 
   const { buckets } = _buildBuckets();
-  const maxBuckets = { week:10, month:6, "6m":6, "1y":12 }[chartRange] || 10;
-  const labels = Object.keys(buckets).sort().slice(-maxBuckets);
+  // Labels sorted chronologically — no slicing needed, _buildBuckets already filters by date range
+  const rawLabels = Object.keys(buckets).sort();
+
+  // Format labels nicely based on bucket size
+  const rangeDays = { "1w":7, "2w":14, "1m":30, "3m":91, "6m":182, "1y":365 }[chartRange] || 7;
+  const bucketSize = rangeDays <= 14 ? "day" : rangeDays <= 91 ? "week" : "month";
+  const labels = rawLabels.map(key => {
+    try {
+      const d = new Date(key + "T12:00:00");
+      if (bucketSize === "day")   return d.toLocaleDateString("en-GB",{weekday:"short",day:"numeric",month:"short"});
+      if (bucketSize === "week")  return d.toLocaleDateString("en-GB",{day:"numeric",month:"short"});
+      if (bucketSize === "month") return d.toLocaleDateString("en-GB",{month:"short",year:"2-digit"});
+    } catch(e) {}
+    return key;
+  });
 
   // ── Summary stats ──
-  const allBucketVals = labels.map(l => buckets[l]);
-  const totalSessions = allBucketVals.reduce((s,b)=>s+(b.sessions||0),0);
-  const totalKm = allBucketVals.reduce((s,b)=>s+b.run+b.bike+b.swim+b.brick, 0);
-  const totalMins = allBucketVals.reduce((s,b)=>s+b.durRun+b.durBike+b.durSwim+b.durBrick, 0);
+  const allBucketVals = rawLabels.map(l => buckets[l]);
+  const currentBucket = buckets[rawLabels[rawLabels.length - 1]] || {};
+  const rangeSessions = allBucketVals.reduce((s,b)=>s+(b?.sessions||0),0);
+  const rangeKm       = allBucketVals.reduce((s,b)=>s+(b?.run||0)+(b?.bike||0)+(b?.swim||0)+(b?.brick||0), 0);
+  const rangeMins     = allBucketVals.reduce((s,b)=>s+(b?.durRun||0)+(b?.durBike||0)+(b?.durSwim||0)+(b?.durBrick||0), 0);
+  const curSessions = currentBucket.sessions || 0;
+  const curKm       = (currentBucket.run||0)+(currentBucket.bike||0)+(currentBucket.swim||0)+(currentBucket.brick||0);
+  const curMins     = (currentBucket.durRun||0)+(currentBucket.durBike||0)+(currentBucket.durSwim||0)+(currentBucket.durBrick||0);
+  const totalMins   = rangeMins;
 
-  const trend = labels.length >= 2
+  const periodLabel = { "1w":"this week","2w":"this 2 weeks","1m":"this month","3m":"last 3 months","6m":"last 6 months","1y":"this year" }[chartRange] || "this period";
+
+  const trend = rawLabels.length >= 2
     ? (() => {
-        const prev = buckets[labels[labels.length-2]];
-        const curr = buckets[labels[labels.length-1]];
-        const prevV = prev.run+prev.bike+prev.swim+prev.brick;
-        const currV = curr.run+curr.bike+curr.swim+curr.brick;
+        const prev = buckets[rawLabels[rawLabels.length-2]] || {};
+        const curr = buckets[rawLabels[rawLabels.length-1]] || {};
+        const prevV = (prev.run||0)+(prev.bike||0)+(prev.swim||0)+(prev.brick||0);
+        const currV = (curr.run||0)+(curr.bike||0)+(curr.swim||0)+(curr.brick||0);
         if (currV > prevV * 1.05) return "↑";
         if (currV < prevV * 0.95) return "↓";
         return "→";
@@ -1537,23 +1578,24 @@ function renderChart() {
   const trendColor = trend === "↑" ? "#34d399" : trend === "↓" ? "#f472b6" : "#6d5b9e";
 
   const sportTiles = CHART_SPORTS.map(sp => {
-    const km = allBucketVals.reduce((s,b)=>s+(b[sp.key]||0),0);
+    const km = allBucketVals.reduce((s,b)=>s+(b?.[sp.key]||0),0);
+    const curKmSport = currentBucket[sp.key] || 0;
     if (km === 0) return "";
-    const pct = totalKm > 0 ? Math.round((km/totalKm)*100) : 0;
+    const pct = rangeKm > 0 ? Math.round((km/rangeKm)*100) : 0;
     return `<div style="flex:1;background:#130c24;border:1px solid ${sp.color}33;border-top:3px solid ${sp.color};border-radius:10px;padding:8px 6px;text-align:center">
       <div style="font-size:15px">${sp.icon}</div>
-      <div style="font-size:13px;font-weight:800;color:${sp.color};margin:2px 0">${km.toFixed(0)}<span style="font-size:9px;font-weight:600;color:#6d5b9e">km</span></div>
-      <div style="font-size:9px;color:#4a3878;font-weight:700">${pct}%</div>
+      <div style="font-size:13px;font-weight:800;color:${sp.color};margin:2px 0">${curKmSport.toFixed(1)}<span style="font-size:9px;font-weight:600;color:#6d5b9e">km</span></div>
+      <div style="font-size:9px;color:#4a3878;font-weight:700">${pct}% of total</div>
     </div>`;
   }).join("");
 
-  if (!labels.length) {
+  if (!rawLabels.length) {
     container.innerHTML = `
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px">
         <div style="background:#1a1040;border:1px solid #2a1a52;border-radius:12px;padding:10px 12px;text-align:center">
           <div style="font-size:9px;color:#4a3878;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:4px">Sessions</div>
           <div style="font-size:22px;font-weight:900;color:#c4b5fd">0</div>
-          <div style="font-size:10px;color:#6d5b9e;margin-top:2px">logged</div>
+          <div style="font-size:10px;color:#6d5b9e;margin-top:2px">${periodLabel}</div>
         </div>
         <div style="background:#1a1040;border:1px solid #2a1a52;border-radius:12px;padding:10px 12px;text-align:center">
           <div style="font-size:9px;color:#4a3878;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:4px">Distance</div>
@@ -1564,16 +1606,16 @@ function renderChart() {
           <div style="font-size:22px;font-weight:900;color:#c4b5fd">—</div>
         </div>
       </div>
-      <div class="chart-empty">Log some workouts to see your progress chart.</div>`;
+      <div class="chart-empty">No workouts logged in ${periodLabel}.</div>`;
     return;
   }
 
-  // ── Build datasets ──
+  // ── Build datasets using rawLabels for data, labels for display ──
   const metricLabel = { distance:"km", duration:"hrs", sessions:"sessions", hr:"bpm" }[chartMetric] || "km";
 
-  // HR metric: single line chart showing avg HR per bucket
+  // HR metric: single line chart
   if (chartMetric === "hr") {
-    const hrData = labels.map(l => {
+    const hrData = rawLabels.map(l => {
       const b = buckets[l];
       return (b && b.hrCount > 0) ? Math.round(b.hrSum / b.hrCount) : null;
     });
@@ -1609,7 +1651,7 @@ function renderChart() {
     borderColor: sp.color,
     borderWidth: 1.5,
     borderRadius: 4,
-    data: labels.map(l => {
+    data: rawLabels.map(l => {
       const b = buckets[l]; if (!b) return 0;
       if (chartMetric === "distance") return parseFloat((b[sp.key]||0).toFixed(1));
       if (chartMetric === "duration") {
@@ -1628,18 +1670,18 @@ function renderChart() {
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px">
       <div style="background:#1a1040;border:1px solid #2a1a52;border-radius:12px;padding:10px 12px;text-align:center">
         <div style="font-size:9px;color:#4a3878;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:4px">Sessions</div>
-        <div style="font-size:22px;font-weight:900;color:#c4b5fd;letter-spacing:-0.5px">${totalSessions}</div>
-        <div style="font-size:10px;color:#6d5b9e;margin-top:2px">logged</div>
+        <div style="font-size:22px;font-weight:900;color:#c4b5fd;letter-spacing:-0.5px">${curSessions}</div>
+        <div style="font-size:10px;color:#6d5b9e;margin-top:2px">${periodLabel} · ${rangeSessions} total</div>
       </div>
       <div style="background:#1a1040;border:1px solid #2a1a52;border-radius:12px;padding:10px 12px;text-align:center">
         <div style="font-size:9px;color:#4a3878;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:4px">Distance</div>
-        <div style="font-size:22px;font-weight:900;color:#c4b5fd;letter-spacing:-0.5px">${totalKm.toFixed(0)}<span style="font-size:12px;font-weight:600;color:#6d5b9e">km</span></div>
-        <div style="font-size:10px;color:${trendColor};margin-top:2px;font-weight:700">${trend} vs prev</div>
+        <div style="font-size:22px;font-weight:900;color:#c4b5fd;letter-spacing:-0.5px">${curKm.toFixed(0)}<span style="font-size:12px;font-weight:600;color:#6d5b9e">km</span></div>
+        <div style="font-size:10px;color:${trendColor};margin-top:2px;font-weight:700">${trend} · ${rangeKm.toFixed(0)}km total</div>
       </div>
       <div style="background:#1a1040;border:1px solid #2a1a52;border-radius:12px;padding:10px 12px;text-align:center">
         <div style="font-size:9px;color:#4a3878;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:4px">Time</div>
-        <div style="font-size:22px;font-weight:900;color:#c4b5fd;letter-spacing:-0.5px">${totalMins>0?Math.floor(totalMins/60):"—"}<span style="font-size:12px;font-weight:600;color:#6d5b9e">${totalMins>0?"h":""}</span></div>
-        <div style="font-size:10px;color:#6d5b9e;margin-top:2px">total</div>
+        <div style="font-size:22px;font-weight:900;color:#c4b5fd;letter-spacing:-0.5px">${curMins>0?Math.floor(curMins/60):"—"}<span style="font-size:12px;font-weight:600;color:#6d5b9e">${curMins>0?"h":""}</span></div>
+        <div style="font-size:10px;color:#6d5b9e;margin-top:2px">${periodLabel}${rangeMins>0?" · "+Math.floor(rangeMins/60)+"h total":""}</div>
       </div>
     </div>
     ${sportTiles ? `<div style="display:flex;gap:6px;margin-bottom:14px">${sportTiles}</div>` : ""}
