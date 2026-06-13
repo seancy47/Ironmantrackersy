@@ -1,4 +1,4 @@
-const CACHE = "ironman-v6";
+const CACHE = "ironman-v7";
 const BASE = "/Ironmantrackersy";
 const ASSETS = [
   BASE + "/",
@@ -26,15 +26,24 @@ self.addEventListener("activate", e => {
 });
 
 self.addEventListener("fetch", e => {
-  if (e.request.method !== "GET") return;
   const url = new URL(e.request.url);
-  if (url.origin !== self.location.origin) return;
+
+  // CRITICAL: Let ALL cross-origin requests pass straight through
+  // This covers Supabase, Anthropic API, Chart.js CDN etc.
+  // Never intercept or cache these — just let them go to the network
+  if (url.origin !== self.location.origin) {
+    e.respondWith(fetch(e.request));
+    return;
+  }
+
+  // Only cache same-origin GET requests (our own HTML/JS/assets)
+  if (e.request.method !== "GET") return;
 
   e.respondWith(
     caches.match(e.request).then(cached => {
       if (cached) return cached;
       return fetch(e.request).then(response => {
-        if (response && response.status === 200 && response.type === "basic") {
+        if (response && response.status === 200) {
           caches.open(CACHE).then(cache => cache.put(e.request, response.clone()));
         }
         return response;
