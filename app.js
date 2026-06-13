@@ -453,27 +453,33 @@ function removeLogEntry(wi, di) {
 // Supabase operations
 async function supaUpsert(cn, wi, di, data) {
   const pin = getUserPin();
+  const payload = {
+    key: logKey(cn, wi, di),
+    cycle_num: cn, week_index: wi, day_index: di,
+    user_pin: pin,
+    completed: data.completed || false,
+    activity_type: data.activityType || null,
+    feeling: data.feeling ?? null,
+    distance: parseFloat(data.distance) || null,
+    bike_distance: parseFloat(data.bikeDistance) || null,
+    run_distance: parseFloat(data.runDistance) || null,
+    duration: parseFloat(data.duration) > 0 ? parseFloat(data.duration) : null,
+    avg_hr: parseInt(data.avg_hr) > 0 ? parseInt(data.avg_hr) : null,
+    max_hr: parseInt(data.max_hr) > 0 ? parseInt(data.max_hr) : null,
+    notes: data.notes || null,
+    completed_at: data.completedAt || null,
+  };
   try {
-    await fetch(`${SUPA_URL}/rest/v1/logs`, {
+    const res = await fetch(`${SUPA_URL}/rest/v1/logs`, {
       method: "POST",
       headers: { ...SUPA_HEADERS, "Prefer": "resolution=merge-duplicates" },
-      body: JSON.stringify({
-        key: logKey(cn, wi, di),
-        cycle_num: cn, week_index: wi, day_index: di,
-        user_pin: pin,
-        completed: data.completed || false,
-        activity_type: data.activityType || null,
-        feeling: data.feeling ?? null,
-        distance: parseFloat(data.distance) || null,
-        bike_distance: parseFloat(data.bikeDistance) || null,
-        run_distance: parseFloat(data.runDistance) || null,
-        duration: parseFloat(data.duration) > 0 ? parseFloat(data.duration) : null,
-        avg_hr: parseInt(data.avg_hr) > 0 ? parseInt(data.avg_hr) : null,
-        max_hr: parseInt(data.max_hr) > 0 ? parseInt(data.max_hr) : null,
-        notes: data.notes || null,
-        completed_at: data.completedAt || null,
-      })
+      body: JSON.stringify(payload)
     });
+    if (!res.ok) {
+      const err = await res.text();
+      console.error("supaUpsert failed:", res.status, err);
+      console.error("Payload was:", JSON.stringify(payload));
+    }
   } catch(e) { console.warn("Supabase sync failed:", e); }
 }
 
