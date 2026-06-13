@@ -977,15 +977,7 @@ function renderHistory() {
   const typeCounts = {};
   activities.forEach(a => {
     totalKm += a.distKm;
-    // Use logged duration, or estimate from distance if not entered
-    let mins = a.durMins;
-    if (mins === 0 && a.distKm > 0) {
-      if (a.actType === "run") mins = a.distKm * 8;
-      else if (a.actType === "bike") mins = (a.distKm / 22) * 60;
-      else if (a.actType === "swim") mins = a.distKm * 40;
-      else if (a.actType === "brick") mins = (a.distKm * 0.75 / 22) * 60 + (a.distKm * 0.25) * 7;
-    }
-    totalMins += mins;
+    totalMins += a.durMins; // only real logged duration — no estimates
     if (a.actType === "run") runKm += a.distKm;
     if (a.actType === "bike" || a.actType === "brick") bikeKm += parseFloat(a.log?.bikeDistance||a.distKm||0);
     if (a.actType === "swim") swimKm += a.distKm;
