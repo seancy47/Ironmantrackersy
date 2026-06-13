@@ -1495,8 +1495,8 @@ function _buildBuckets() {
   now.setHours(23,59,59,999);
   const rangeDays = { "1w":7, "2w":14, "1m":30, "3m":91, "6m":182, "1y":365 }[chartRange] || 7;
   const cutoff = new Date(now); cutoff.setDate(cutoff.getDate() - rangeDays + 1); cutoff.setHours(0,0,0,0);
-  // For short ranges show daily buckets; for longer ranges show weekly; for 3m+ show monthly
   const bucketSize = rangeDays <= 14 ? "day" : rangeDays <= 91 ? "week" : "month";
+  console.log("_buildBuckets: chartRange=", chartRange, "rangeDays=", rangeDays, "cutoff=", cutoff.toISOString().slice(0,10), "dayData keys=", Object.keys(dayData));
 
   const buckets = {};
 
