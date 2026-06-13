@@ -1,24 +1,27 @@
-const CACHE = "ironman-v4";
+const CACHE = "ironman-v6";
+const BASE = "/Ironmantrackersy";
 const ASSETS = [
-  "/ironmantrackersy/",
-  "/ironmantrackersy/index.html",
-  "/ironmantrackersy/app.js",
-  "/ironmantrackersy/manifest.json",
-  "/ironmantrackersy/icon-192.png",
-  "/ironmantrackersy/icon-512.png"
+  BASE + "/",
+  BASE + "/index.html",
+  BASE + "/app.js",
+  BASE + "/manifest.json",
+  BASE + "/icon-192.png",
+  BASE + "/icon-512.png"
 ];
 
 self.addEventListener("install", e => {
   e.waitUntil(
-    caches.open(CACHE).then(cache => cache.addAll(ASSETS)).then(() => self.skipWaiting())
+    caches.open(CACHE)
+      .then(cache => cache.addAll(ASSETS))
+      .then(() => self.skipWaiting())
   );
 });
 
 self.addEventListener("activate", e => {
   e.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
-    ).then(() => self.clients.claim())
+    caches.keys()
+      .then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k))))
+      .then(() => self.clients.claim())
   );
 });
 
@@ -32,11 +35,10 @@ self.addEventListener("fetch", e => {
       if (cached) return cached;
       return fetch(e.request).then(response => {
         if (response && response.status === 200 && response.type === "basic") {
-          const clone = response.clone();
-          caches.open(CACHE).then(cache => cache.put(e.request, clone));
+          caches.open(CACHE).then(cache => cache.put(e.request, response.clone()));
         }
         return response;
-      });
+      }).catch(() => caches.match(BASE + "/index.html"));
     })
   );
 });
