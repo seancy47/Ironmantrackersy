@@ -259,7 +259,11 @@
   <div id="today-screen" class="screen active">
     <div class="page-header">
       <span id="today-date" style="font-size:12px;color:var(--faint);font-weight:600;letter-spacing:0.08em;text-transform:uppercase"></span>
-      <span id="today-week-badge" class="week-badge"></span>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span id="sync-status" style="font-size:10px;font-weight:600;letter-spacing:0.06em"></span>
+        <button onclick="supaSync()" style="background:none;border:none;cursor:pointer;font-size:14px;color:var(--faint);padding:2px" title="Sync now">⟳</button>
+        <span id="today-week-badge" class="week-badge"></span>
+      </div>
     </div>
     <div class="pad">
       <div id="today-card" class="today-card"></div>
@@ -828,6 +832,114 @@ const DAYS = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
 // Keys: "C{cycleNum}-{wi}-{di}" e.g. "C0-2-4"
 // Migrates legacy "wi-di" keys to "C0-wi-di" on first load
 
+// --- Supabase config ---
+const SUPA_URL = "https://sfnslkdwaldinhaismgz.supabase.co";
+const SUPA_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNmbnNsa2R3YWxkaW5oYWlzbWd6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzMTQwNzMsImV4cCI6MjA5Njg5MDA3M30.r9o-9_3VqhH846AxOW4mQ9thttwUG3XP74KArPHzzaA";
+const SUPA_HEADERS = { "Content-Type": "application/json", "apikey": SUPA_KEY, "Authorization": `Bearer ${SUPA_KEY}` };
+
+function getUserPin() { return localStorage.getItem("app_pin") || ""; }
+
+// Local cache — keeps UI instant, Supabase is source of truth
+function getLogs() { try { return JSON.parse(localStorage.getItem("dt_logs")||"{}"); } catch { return {}; } }
+function saveLogsLocal(l) { localStorage.setItem("dt_logs", JSON.stringify(l)); }
+function logKey(cn, wi, di) { return `C${cn}-${wi}-${di}`; }
+function getLog(wi, di) { const cn = getCurrentCycle(); return getLogs()[logKey(cn, wi, di)] || null; }
+
+// Write to local cache immediately, then sync to Supabase in background
+function setLog(wi, di, data) {
+  const key = logKey(getCurrentCycle(), wi, di);
+  const l = getLogs();
+  l[key] = {...data, cycleNum: getCurrentCycle()};
+  saveLogsLocal(l);
+  supaUpsert(getCurrentCycle(), wi, di, l[key]);
+}
+
+function removeLogEntry(wi, di) {
+  const key = logKey(getCurrentCycle(), wi, di);
+  const l = getLogs();
+  delete l[key];
+  saveLogsLocal(l);
+  supaDelete(getCurrentCycle(), wi, di);
+}
+
+// Supabase operations
+async function supaUpsert(cn, wi, di, data) {
+  const pin = getUserPin(); if (!pin) return;
+  try {
+    await fetch(`${SUPA_URL}/rest/v1/logs`, {
+      method: "POST",
+      headers: { ...SUPA_HEADERS, "Prefer": "resolution=merge-duplicates" },
+      body: JSON.stringify({
+        key: logKey(cn, wi, di),
+        cycle_num: cn, week_index: wi, day_index: di,
+        user_pin: pin,
+        completed: data.completed || false,
+        activity_type: data.activityType || null,
+        feeling: data.feeling ?? null,
+        distance: parseFloat(data.distance) || null,
+        bike_distance: parseFloat(data.bikeDistance) || null,
+        run_distance: parseFloat(data.runDistance) || null,
+        duration: parseFloat(data.duration) || null,
+        notes: data.notes || null,
+        completed_at: data.completedAt || null,
+      })
+    });
+  } catch(e) { console.warn("Supabase sync failed:", e); }
+}
+
+async function supaDelete(cn, wi, di) {
+  const pin = getUserPin(); if (!pin) return;
+  try {
+    await fetch(`${SUPA_URL}/rest/v1/logs?key=eq.${logKey(cn,wi,di)}&user_pin=eq.${pin}`, {
+      method: "DELETE", headers: SUPA_HEADERS
+    });
+  } catch(e) { console.warn("Supabase delete failed:", e); }
+}
+
+// Pull all logs from Supabase and update local cache
+async function supaSync() {
+  const pin = getUserPin(); if (!pin) return;
+  try {
+    showSyncStatus("syncing");
+    const res = await fetch(`${SUPA_URL}/rest/v1/logs?user_pin=eq.${pin}&select=*`, {
+      headers: SUPA_HEADERS
+    });
+    if (!res.ok) throw new Error(res.status);
+    const rows = await res.json();
+    const merged = {};
+    rows.forEach(r => {
+      merged[r.key] = {
+        completed: r.completed,
+        activityType: r.activity_type,
+        feeling: r.feeling,
+        distance: r.distance != null ? String(r.distance) : "",
+        bikeDistance: r.bike_distance != null ? String(r.bike_distance) : "",
+        runDistance: r.run_distance != null ? String(r.run_distance) : "",
+        duration: r.duration != null ? String(r.duration) : "",
+        notes: r.notes || "",
+        completedAt: r.completed_at,
+        cycleNum: r.cycle_num,
+      };
+    });
+    saveLogsLocal(merged);
+    showSyncStatus("ok");
+    renderToday();
+    if (document.getElementById("history-screen").classList.contains("active")) renderHistory();
+    if (document.getElementById("plan-screen").classList.contains("active")) renderPlan(activePlanWeek);
+  } catch(e) {
+    console.warn("Supabase pull failed:", e);
+    showSyncStatus("error");
+  }
+}
+
+function showSyncStatus(state) {
+  const el = document.getElementById("sync-status");
+  if (!el) return;
+  if (state === "syncing") { el.textContent = "⟳ Syncing..."; el.style.color = "var(--faint)"; }
+  else if (state === "ok") { el.textContent = "✓ Synced"; el.style.color = "var(--accent-bright)"; setTimeout(()=>{ el.textContent=""; }, 3000); }
+  else { el.textContent = "⚠ Sync failed"; el.style.color = "#f59e0b"; }
+}
+
 function getCycleStart() {
   const s=localStorage.getItem("dt_cycle"); if(s) return new Date(s);
   const today=new Date(), day=today.getDay();
@@ -838,46 +950,7 @@ function getCurrentWeek() {
   const diff=Math.floor((new Date()-getCycleStart())/86400000);
   return Math.min(Math.floor(diff/7), PLAN.weeks.length-1);
 }
-function getCurrentCycle() {
-  return 0; // Single 44-week plan, no cycling
-}
-
-function getLogs() { try { return JSON.parse(localStorage.getItem("dt_logs")||"{}"); } catch { return {}; } }
-function saveLogs(l) { localStorage.setItem("dt_logs", JSON.stringify(l)); }
-function logKey(cn, wi, di) { return `C${cn}-${wi}-${di}`; }
-function getLog(wi, di) { const cn = getCurrentCycle(); return getLogs()[logKey(cn, wi, di)] || null; }
-function setLog(wi, di, data) { const l = getLogs(); l[logKey(getCurrentCycle(), wi, di)] = {...data, cycleNum: getCurrentCycle()}; saveLogs(l); }
-function removeLogEntry(wi, di) { const l = getLogs(); delete l[logKey(getCurrentCycle(), wi, di)]; saveLogs(l); }
-
-function getAllLogsByCycle() {
-  const logs = getLogs();
-  const cycles = {};
-  Object.entries(logs).forEach(([k, v]) => {
-    const m = k.match(/^C(\d+)-(\d+)-(\d+)$/);
-    if (!m) return;
-    const [, cn, wi, di] = m.map(Number);
-    if (!cycles[cn]) cycles[cn] = {};
-    if (!cycles[cn][wi]) cycles[cn][wi] = {};
-    cycles[cn][wi][di] = v;
-  });
-  return cycles;
-}
-
-function migrateLogs() {
-  const raw = localStorage.getItem("dt_logs");
-  if (!raw) return;
-  const data = JSON.parse(raw);
-  let changed = false;
-  Object.keys(data).forEach(k => {
-    if (!k.startsWith("C")) {
-      data[`C0-${k}`] = data[k];
-      delete data[k];
-      changed = true;
-    }
-  });
-  if (changed) localStorage.setItem("dt_logs", JSON.stringify(data));
-}
-migrateLogs();
+function getCurrentCycle() { return 0; }
 
 
 // Returns the real calendar date (YYYY-MM-DD) for a given plan week + day index
@@ -1403,8 +1476,9 @@ const SESSION_KEY = "pin_session";
 
 function pinUnlock() {
   document.getElementById("pin-gate").classList.add("hidden");
-  // Store session so user doesn't re-enter PIN for the rest of the browser session
   sessionStorage.setItem(SESSION_KEY, "1");
+  // Sync from Supabase after unlock so cross-device data loads immediately
+  setTimeout(supaSync, 300);
 }
 
 function pinSetup() {
