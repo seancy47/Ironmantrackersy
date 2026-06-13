@@ -2164,22 +2164,37 @@ function parseCSVRows(text) {
 
 function parseStravaDate(raw) {
   if (!raw) return null;
-  // Try ISO first: "2026-06-09" or "2026-06-09T07:30:00Z"
-  const iso = raw.match(/^(\d{4}-\d{2}-\d{2})/);
-  if (iso) return iso[1];
-  // Strava default: "Jun 9, 2026, 7:30:00 AM" or "Jun 09, 2026, 07:30:00 AM"
-  const m = raw.match(/^([A-Za-z]+)\s+(\d{1,2}),\s*(\d{4})/);
-  if (m) {
-    const months = {jan:"01",feb:"02",mar:"03",apr:"04",may:"05",jun:"06",jul:"07",aug:"08",sep:"09",oct:"10",nov:"11",dec:"12"};
-    const mo = months[m[1].toLowerCase().slice(0,3)];
-    if (mo) return `${m[3]}-${mo}-${m[2].padStart(2,"0")}`;
-  }
-  // Last resort: let Date parse it
+  // Strava CSV dates are in UTC. Convert to local date using the browser's timezone.
+  // Try to parse as a real date and convert to local date string.
   try {
-    const d = new Date(raw);
-    if (!isNaN(d)) return d.toISOString().slice(0,10);
-  } catch(e) {}
-  return null;
+    let dateObj = null;
+    // ISO format: "2026-06-09" or "2026-06-09T07:30:00Z"
+    const iso = raw.match(/^(\d{4}-\d{2}-\d{2})/);
+    if (iso && !raw.includes(',')) {
+      // Already a date-only ISO string — use as-is
+      return iso[1];
+    }
+    // Strava default: "Jun 13, 2026, 12:14:09 AM"
+    const m = raw.match(/^([A-Za-z]+)\s+(\d{1,2}),\s*(\d{4}),?\s*(\d{1,2}):(\d{2}):(\d{2})\s*(AM|PM)?/i);
+    if (m) {
+      const months = {jan:0,feb:1,mar:2,apr:3,may:4,jun:5,jul:6,aug:7,sep:8,oct:9,nov:10,dec:11};
+      const mo = months[m[1].toLowerCase().slice(0,3)];
+      if (mo === undefined) return null;
+      let hr = parseInt(m[4]);
+      const mn = parseInt(m[5]);
+      const sc = parseInt(m[6]);
+      const ampm = (m[7]||"").toUpperCase();
+      if (ampm === "PM" && hr < 12) hr += 12;
+      if (ampm === "AM" && hr === 12) hr = 0;
+      // Construct as UTC date (Strava CSV is UTC)
+      dateObj = new Date(Date.UTC(parseInt(m[3]), mo, parseInt(m[2]), hr, mn, sc));
+    }
+    if (!dateObj) dateObj = new Date(raw);
+    if (isNaN(dateObj)) return null;
+    // Convert UTC to local date — use browser's timezone automatically
+    const local = new Date(dateObj.getTime() - dateObj.getTimezoneOffset() * 60000);
+    return local.toISOString().slice(0, 10);
+  } catch(e) { return null; }
 }
 
 function normaliseStravaType(raw) {
