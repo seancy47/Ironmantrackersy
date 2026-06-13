@@ -1,11 +1,11 @@
-const CACHE = "ironman-v3";
+const CACHE = "ironman-v4";
 const ASSETS = [
-  "/ironmantracker/",
-  "/ironmantracker/index.html",
-  "/ironmantracker/app.js",
-  "/ironmantracker/manifest.json",
-  "/ironmantracker/icon-192.png",
-  "/ironmantracker/icon-512.png"
+  "/ironmantrackersy/",
+  "/ironmantrackersy/index.html",
+  "/ironmantrackersy/app.js",
+  "/ironmantrackersy/manifest.json",
+  "/ironmantrackersy/icon-192.png",
+  "/ironmantrackersy/icon-512.png"
 ];
 
 self.addEventListener("install", e => {

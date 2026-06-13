@@ -2,21 +2,21 @@
   "name": "Ironman Tracker",
   "short_name": "Ironman",
   "description": "44-week Ironman triathlon training tracker",
-  "start_url": "/ironmantracker/",
-  "scope": "/ironmantracker/",
+  "start_url": "/ironmantrackersy/",
+  "scope": "/ironmantrackersy/",
   "display": "standalone",
   "background_color": "#0e0818",
   "theme_color": "#0e0818",
   "orientation": "portrait",
   "icons": [
     {
-      "src": "/ironmantracker/icon-192.png",
+      "src": "/ironmantrackersy/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/ironmantracker/icon-512.png",
+      "src": "/ironmantrackersy/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
