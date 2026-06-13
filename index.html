@@ -267,22 +267,22 @@
     <div class="pin-dot" id="pd2"></div>
     <div class="pin-dot" id="pd3"></div>
   </div>
-  <div class="pin-keypad">
-    <button class="pin-key" onclick="pinPress(1)">1</button>
-    <button class="pin-key" onclick="pinPress(2)">2</button>
-    <button class="pin-key" onclick="pinPress(3)">3</button>
-    <button class="pin-key" onclick="pinPress(4)">4</button>
-    <button class="pin-key" onclick="pinPress(5)">5</button>
-    <button class="pin-key" onclick="pinPress(6)">6</button>
-    <button class="pin-key" onclick="pinPress(7)">7</button>
-    <button class="pin-key" onclick="pinPress(8)">8</button>
-    <button class="pin-key" onclick="pinPress(9)">9</button>
-    <button class="pin-key empty"></button>
-    <button class="pin-key" onclick="pinPress(0)">0</button>
-    <button class="pin-key del" onclick="pinDel()">⌫</button>
+  <div class="pin-keypad" id="pin-keypad">
+    <button class="pin-key" data-pin="1">1</button>
+    <button class="pin-key" data-pin="2">2</button>
+    <button class="pin-key" data-pin="3">3</button>
+    <button class="pin-key" data-pin="4">4</button>
+    <button class="pin-key" data-pin="5">5</button>
+    <button class="pin-key" data-pin="6">6</button>
+    <button class="pin-key" data-pin="7">7</button>
+    <button class="pin-key" data-pin="8">8</button>
+    <button class="pin-key" data-pin="9">9</button>
+    <button class="pin-key empty" disabled></button>
+    <button class="pin-key" data-pin="0">0</button>
+    <button class="pin-key del" data-pin="del">⌫</button>
   </div>
   <div class="pin-error" id="pin-error"></div>
-  <div class="pin-setup" id="pin-setup-link" onclick="pinReset()" style="display:none">Reset PIN</div>
+  <div class="pin-setup" id="pin-setup-link" style="display:none">Reset PIN</div>
 </div>
   <div id="today-screen" class="screen active">
     <div class="page-header">
@@ -1658,11 +1658,28 @@ function pinSetup() {
 }
 
 function initPin() {
+  // Attach keypad listeners (using event delegation — reliable and CSP-safe)
+  const keypad = document.getElementById("pin-keypad");
+  if (keypad && !keypad.dataset.bound) {
+    keypad.dataset.bound = "1";
+    keypad.addEventListener("click", e => {
+      const btn = e.target.closest("button");
+      if (!btn || btn.disabled) return;
+      const val = btn.dataset.pin;
+      if (val === "del") pinDel();
+      else if (val !== undefined) pinPress(Number(val));
+    });
+  }
+  const setupLink = document.getElementById("pin-setup-link");
+  if (setupLink && !setupLink.dataset.bound) {
+    setupLink.dataset.bound = "1";
+    setupLink.addEventListener("click", pinReset);
+  }
+
   const stored = localStorage.getItem(PIN_KEY);
   // Already authenticated this session
   if (sessionStorage.getItem(SESSION_KEY)) { pinUnlock(); return; }
   if (!stored) {
-    // No PIN set yet — setup mode
     document.getElementById("pin-subtitle").textContent = "Set a 4-digit PIN to protect your data";
     document.getElementById("pin-setup-link").style.display = "none";
   } else {
