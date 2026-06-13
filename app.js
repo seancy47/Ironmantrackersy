@@ -568,7 +568,8 @@ function getCycleStart() {
   localStorage.setItem("dt_cycle",mon.toISOString()); return mon;
 }
 function getCurrentWeek() {
-  const diff=Math.floor((new Date()-getCycleStart())/86400000);
+  const diff = Math.floor((new Date() - getCycleStart()) / 86400000);
+  if (isNaN(diff) || diff < 0) return 0;
   return Math.min(Math.floor(diff/7), PLAN.weeks.length-1);
 }
 function getCurrentCycle() { return 0; }
@@ -607,6 +608,7 @@ function showTab(name, el) {
 function renderToday() {
   const today=new Date(), todayName=DAYS[today.getDay()];
   const wi=getCurrentWeek(), week=PLAN.weeks[wi];
+  if (!week) { console.error("renderToday: week undefined, wi=", wi); return; }
   document.getElementById("today-date").textContent=today.toLocaleDateString("en-GB",{weekday:"short",day:"numeric",month:"short",year:"numeric"}).toUpperCase();
   document.getElementById("today-week-badge").textContent=`W${wi+1} of 44 · ${week.tag}`;
 
@@ -1827,7 +1829,13 @@ async function pullSettings() {
     const rows = await res.json();
     if (!rows.length) return; // no settings saved yet
     const s = rows[0];
-    if (s.plan_start)    localStorage.setItem("dt_cycle", s.plan_start);
+    if (s.plan_start) {
+      // Validate the date is reasonable before saving
+      const d = new Date(s.plan_start);
+      if (!isNaN(d) && d > new Date('2020-01-01') && d < new Date('2030-01-01')) {
+        localStorage.setItem("dt_cycle", s.plan_start);
+      }
+    }
     if (s.notif_enabled  != null) localStorage.setItem("notif_enabled",   String(s.notif_enabled));
     if (s.notif_skip_rest != null) localStorage.setItem("notif_skip_rest", String(s.notif_skip_rest));
     if (s.notif_time)    localStorage.setItem("notif_time", s.notif_time);
