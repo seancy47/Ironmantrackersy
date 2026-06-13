@@ -1081,7 +1081,16 @@ function renderHistory() {
     </div>`;
   }).join("");
 
-  // Render strava import bar
+  // Render strava import bar — inject it programmatically so it works
+  // regardless of whether the HTML has the strava-import-bar div or not
+  let importBarEl = document.getElementById("strava-import-bar");
+  if (!importBarEl) {
+    // Create and insert before hist-stats if missing from HTML
+    importBarEl = document.createElement("div");
+    importBarEl.id = "strava-import-bar";
+    const statsEl = document.getElementById("hist-stats");
+    if (statsEl) statsEl.parentNode.insertBefore(importBarEl, statsEl);
+  }
   renderStravaImportBar();
 
   if (merged.length === 0) {
@@ -1180,7 +1189,15 @@ function appInit() {
   }
 
   attachDelegatedHandlers();
-  renderStravaImportBar(); // populate immediately so it's ready when History tab opens
+  // Ensure strava-import-bar exists in the DOM regardless of HTML version
+  if (!document.getElementById("strava-import-bar")) {
+    const bar = document.createElement("div");
+    bar.id = "strava-import-bar";
+    bar.style.cssText = "background:#1a0d08;border:1px solid #fc4c0244;border-radius:12px;padding:12px 14px;margin:0 20px 16px;";
+    const statsEl = document.getElementById("hist-stats");
+    if (statsEl) statsEl.parentNode.insertBefore(bar, statsEl);
+  }
+  renderStravaImportBar();
   setTimeout(supaSync, 300);
   renderToday();
   renderPlan(0);
@@ -1809,24 +1826,24 @@ function renderStravaImportBar() {
   const lastSync = localStorage.getItem("strava_import_date");
   const lastStr = lastSync ? new Date(lastSync).toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"}) : null;
 
-  el.innerHTML = `<div class="strava-import-bar">
-    <div class="strava-import-row">
+  el.innerHTML = `<div style="background:#1a0d08;border:1px solid #fc4c0244;border-radius:12px;padding:12px 14px;margin-bottom:16px">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
       <div>
-        <div class="strava-logo">STRAVA</div>
-        <div class="strava-import-status">
+        <div style="font-size:13px;font-weight:900;color:#fc4c02;letter-spacing:-0.5px">STRAVA</div>
+        <div style="font-size:12px;color:#6d5b9e;margin-top:2px">
           ${stravaImporting ? "Importing activities..." :
             count > 0 ? `${count} activities imported${lastStr ? " · Last sync "+lastStr : ""}` :
             "Import your Strava history into this timeline"}
         </div>
       </div>
       <div style="display:flex;gap:8px;align-items:center">
-        ${count > 0 ? `<button class="strava-import-btn" style="background:transparent;border:1px solid #fc4c0266;color:#fc4c02" data-action="stravaClear">Clear</button>` : ""}
-        <button class="strava-import-btn" ${stravaImporting?"disabled":""} data-action="stravaImport">
+        ${count > 0 ? `<button style="background:transparent;border:1px solid #fc4c0266;color:#fc4c02;border-radius:8px;padding:7px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit" data-action="stravaClear">Clear</button>` : ""}
+        <button style="background:${stravaImporting?"#52525b":"#fc4c02"};color:#fff;border:none;border-radius:8px;padding:7px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap" ${stravaImporting?"disabled":""} data-action="stravaImport">
           ${stravaImporting ? "Importing..." : count > 0 ? "Refresh" : "Import"}
         </button>
       </div>
     </div>
-    ${stravaImporting ? `<div class="strava-import-progress"><div class="strava-import-track"><div class="strava-import-fill" id="strava-prog-fill" style="width:0%"></div></div><div class="strava-import-text" id="strava-prog-text">Connecting to Strava...</div></div>` : ""}
+    ${stravaImporting ? `<div style="margin-top:10px"><div style="height:3px;background:#2a1a52;border-radius:2px;overflow:hidden;margin-bottom:4px"><div id="strava-prog-fill" style="height:100%;background:#fc4c02;border-radius:2px;transition:width 0.3s;width:0%"></div></div><div id="strava-prog-text" style="font-size:11px;color:#6d5b9e">Connecting to Strava...</div></div>` : ""}
   </div>`;
 }
 

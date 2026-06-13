@@ -220,7 +220,18 @@
   .chart-legend { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 10px; }
   .chart-legend-item { display: flex; align-items: center; gap: 5px; font-size: 10px; color: var(--muted); }
   .chart-legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-  /* Notification settings */
+  /* Strava import */
+  .strava-import-bar { background:#1a0d08;border:1px solid #fc4c0244;border-radius:12px;padding:12px 14px;margin-bottom:16px; }
+  .strava-import-row { display:flex;align-items:center;justify-content:space-between;gap:8px; }
+  .strava-logo { font-size:13px;font-weight:900;color:#fc4c02;letter-spacing:-0.5px; }
+  .strava-import-status { font-size:12px;color:var(--dim);margin-top:2px; }
+  .strava-import-btn { background:#fc4c02;color:#fff;border:none;border-radius:8px;padding:7px 14px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;font-family:inherit; }
+  .strava-import-btn:disabled { background:#52525b;cursor:not-allowed; }
+  .strava-import-progress { margin-top:10px; }
+  .strava-import-track { height:3px;background:var(--border);border-radius:2px;overflow:hidden;margin-bottom:4px; }
+  .strava-import-fill { height:100%;background:#fc4c02;border-radius:2px;transition:width 0.3s; }
+  .strava-import-text { font-size:11px;color:var(--dim); }
+
   .notif-section { margin: 0 20px 14px; background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 14px 16px; }
   .notif-section-title { font-size: 9px; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; color: var(--faint); margin-bottom: 14px; }
   .notif-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); }
@@ -304,6 +315,8 @@
       </div>
     </div>
     <div class="pad">
+      <!-- Strava import bar -->
+      <div id="strava-import-bar"></div>
       <div class="stat-grid" id="hist-stats"></div>
       <div class="type-bar" id="hist-type-bar"></div>
     </div>
