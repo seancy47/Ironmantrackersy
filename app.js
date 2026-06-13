@@ -498,22 +498,41 @@ async function supaSync() {
       });
       if (!res.ok) throw new Error(res.status);
       const rows = await res.json();
-      const merged = {};
+      const local = getLogs();
+      const merged = { ...local }; // start with local so we never lose data
       rows.forEach(r => {
+        const existing = local[r.key] || {};
         merged[r.key] = {
-          completed: r.completed,
-          activityType: r.activity_type,
-          feeling: r.feeling,
-          distance: r.distance != null ? String(r.distance) : "",
-          bikeDistance: r.bike_distance != null ? String(r.bike_distance) : "",
-          runDistance: r.run_distance != null ? String(r.run_distance) : "",
-          duration: r.duration != null ? String(r.duration) : "",
-          avg_hr: r.avg_hr || 0,
-          max_hr: r.max_hr || 0,
-          notes: r.notes || "",
-          completedAt: r.completed_at,
-          cycleNum: r.cycle_num,
+          completed:    r.completed    ?? existing.completed    ?? false,
+          activityType: r.activity_type ?? existing.activityType ?? null,
+          feeling:      r.feeling      ?? existing.feeling      ?? null,
+          distance:     r.distance     != null ? String(r.distance)      : (existing.distance     || ""),
+          bikeDistance: r.bike_distance != null ? String(r.bike_distance) : (existing.bikeDistance || ""),
+          runDistance:  r.run_distance  != null ? String(r.run_distance)  : (existing.runDistance  || ""),
+          // Only use remote duration/hr if set; keep local value if remote is null
+          duration:     r.duration != null && parseFloat(r.duration) > 0
+                          ? String(r.duration)
+                          : (existing.duration || ""),
+          avg_hr:       r.avg_hr != null && r.avg_hr > 0
+                          ? r.avg_hr
+                          : (existing.avg_hr || 0),
+          max_hr:       r.max_hr != null && r.max_hr > 0
+                          ? r.max_hr
+                          : (existing.max_hr || 0),
+          notes:        r.notes        || existing.notes        || "",
+          completedAt:  r.completed_at || existing.completedAt  || null,
+          cycleNum:     r.cycle_num    ?? existing.cycleNum,
         };
+        // If remote is missing duration/hr but local has them, push local up to Supabase
+        const needsUpdate = (
+          (r.duration == null && existing.duration) ||
+          (r.avg_hr   == null && existing.avg_hr)   ||
+          (r.max_hr   == null && existing.max_hr)
+        );
+        if (needsUpdate) {
+          const m = r.key.match(/^C(\d+)-(\d+)-(\d+)$/);
+          if (m) supaUpsert(Number(m[1]), Number(m[2]), Number(m[3]), merged[r.key]);
+        }
       });
       saveLogsLocal(merged);
     })()]);
