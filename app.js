@@ -425,7 +425,7 @@ const SUPA_URL = "https://sfnslkdwaldinhaismgz.supabase.co";
 const SUPA_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNmbnNsa2R3YWxkaW5oYWlzbWd6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzMTQwNzMsImV4cCI6MjA5Njg5MDA3M30.r9o-9_3VqhH846AxOW4mQ9thttwUG3XP74KArPHzzaA";
 const SUPA_HEADERS = { "Content-Type": "application/json", "apikey": SUPA_KEY, "Authorization": `Bearer ${SUPA_KEY}` };
 
-function getUserPin() { return "seancy47"; } // fixed user ID — no PIN needed
+function getUserPin() { return "6969"; } // fixed user ID matching existing Supabase records
 
 // Local cache — keeps UI instant, Supabase is source of truth
 function getLogs() { try { return JSON.parse(localStorage.getItem("dt_logs")||"{}"); } catch { return {}; } }
