@@ -754,6 +754,26 @@ function renderPlan(wi) {
   document.getElementById("plan-days").innerHTML=week.days.map((d,i)=>{
     const c=TYPE[d.type], log=getLog(wi,i);
     const isRest=d.type==="rest";
+
+    // Build target info string for main bar
+    let targetInfo = "";
+    if (!isRest && d.targetDistance) {
+      const km = d.targetDistance;
+      // Estimate time based on sport type and distance
+      let estMins = 0;
+      if (d.type === "run") estMins = Math.round(km * 8);         // ~8 min/km easy
+      else if (d.type === "bike") estMins = Math.round((km / 22) * 60); // ~22km/h
+      else if (d.type === "swim") estMins = Math.round(km * 40);  // ~40 min/km in pool
+      else if (d.type === "brick") estMins = Math.round((km * 0.75 / 22) * 60 + (km * 0.25) * 7); // rough split
+      const estH = Math.floor(estMins / 60), estM = estMins % 60;
+      const timeStr = estH > 0 ? `${estH}h${estM > 0 ? ` ${estM}m` : ""}` : `${estM}m`;
+      targetInfo = `<div style="display:flex;align-items:center;gap:8px;margin-top:4px">
+        <span style="font-size:11px;font-weight:700;color:${c.color}">${km < 1 ? (km*1000).toFixed(0)+"m" : km+"km"}</span>
+        <span style="font-size:10px;color:var(--faint)">·</span>
+        <span style="font-size:11px;color:var(--dim)">~${timeStr}</span>
+      </div>`;
+    }
+
     return `<div class="day-card" id="day-card-${i}" style="background:${c.bg};border-color:${c.color}${isRest?"22":"55"};opacity:${isRest?"0.55":"1"}" onclick="toggleDay(${i},${wi})">
       <div class="day-card-row">
         <div class="day-icon-circle" style="background:${c.color}22;border:1px solid ${c.color}33">${c.icon}</div>
@@ -762,7 +782,9 @@ function renderPlan(wi) {
             <span class="day-name">${d.day}</span>
             <span class="day-label-text" style="color:${c.color};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${d.label}</span>
           </div>
-          ${d.type!=="rest"?`<div style="display:flex;gap:3px">${dotsHtml(d.effort)}</div>`:""}
+          ${targetInfo}
+          ${d.type!=="rest"&&!targetInfo?`<div style="display:flex;gap:3px;margin-top:2px">${dotsHtml(d.effort)}</div>`:""}
+          ${d.type!=="rest"&&targetInfo?`<div style="display:flex;gap:3px;margin-top:2px">${dotsHtml(d.effort)}</div>`:""}
         </div>
         <div class="day-card-right">
           ${log?.completed?`<span style="font-size:13px;color:${c.color}">✓</span>`:""}
@@ -772,7 +794,7 @@ function renderPlan(wi) {
       </div>
       <div class="expanded" id="exp-${i}">
         <div class="expanded-detail">${d.detail}</div>
-        ${d.targetDistance?`<div class="target-text">🎯 Target: ${d.targetDistance} km</div>`:""}
+        ${d.targetDistance?`<div class="target-text">🎯 Target: ${d.targetDistance < 1 ? (d.targetDistance*1000).toFixed(0)+"m" : d.targetDistance+"km"}</div>`:""}
         ${!isRest?`<button class="log-link" style="color:${c.color};border-color:${c.color}55" onclick="event.stopPropagation();openLog(${wi},${i})">${log?.completed?"✓ View / Edit Log":"Log this workout →"}</button>`:""}
       </div>
     </div>`;
