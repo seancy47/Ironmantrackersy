@@ -160,10 +160,102 @@
   .week-completion-dots { display: flex; gap: 4px; }
   .wcd { width: 6px; height: 6px; border-radius: 50%; }
 
+  /* PIN Gate */
+  #pin-gate { position:fixed; inset:0; background:var(--bg); z-index:999; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:40px 32px; }
+  #pin-gate.hidden { display:none; }
+  .pin-logo { font-size:48px; margin-bottom:16px; }
+  .pin-title { font-size:24px; font-weight:900; color:var(--text); letter-spacing:-0.02em; margin-bottom:6px; }
+  .pin-subtitle { font-size:13px; color:var(--faint); margin-bottom:40px; text-align:center; line-height:1.5; }
+  .pin-dots { display:flex; gap:14px; margin-bottom:36px; }
+  .pin-dot { width:14px; height:14px; border-radius:50%; border:2px solid var(--border2); background:transparent; transition:all 0.15s; }
+  .pin-dot.filled { background:var(--accent); border-color:var(--accent); }
+  .pin-dot.error { background:#ef4444; border-color:#ef4444; }
+  .pin-keypad { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; width:100%; max-width:280px; }
+  .pin-key { background:var(--card); border:1px solid var(--border); border-radius:14px; padding:18px 0; text-align:center; font-size:22px; font-weight:700; color:var(--text); cursor:pointer; user-select:none; transition:all 0.1s; }
+  .pin-key:active { background:var(--border2); transform:scale(0.95); }
+  .pin-key.del { font-size:16px; color:var(--muted); }
+  .pin-key.empty { background:none; border:none; cursor:default; }
+  .pin-error { font-size:12px; color:#ef4444; margin-top:16px; min-height:18px; text-align:center; }
+  .pin-setup { font-size:12px; color:var(--faint); margin-top:20px; cursor:pointer; text-decoration:underline; }
+
+  /* Fuel tab */
+  #fuel-screen { font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
+  .fuel-header { padding: calc(var(--safe-top) + 16px) 20px 14px; }
+  .fuel-header-title { font-size: 24px; font-weight: 900; letter-spacing: -0.02em; color: var(--text); margin-bottom: 2px; }
+  .fuel-header-sub { font-size: 11px; color: var(--faint); }
+  .fuel-section { margin: 0 20px 14px; background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 14px 16px; }
+  .fuel-section-title { font-size: 9px; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; color: var(--faint); margin-bottom: 14px; }
+  .fuel-slider-group { margin-bottom: 16px; }
+  .fuel-slider-group:last-child { margin-bottom: 0; }
+  .fuel-slider-label { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
+  .fuel-slider-label span:first-child { font-size: 13px; color: var(--muted); }
+  .fuel-slider-val { font-size: 14px; font-weight: 700; color: var(--accent-light); }
+  .fuel-range { -webkit-appearance: none; width: 100%; height: 3px; background: var(--border); border-radius: 2px; outline: none; cursor: pointer; }
+  .fuel-range::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%; background: var(--accent); border: 2px solid var(--bg); }
+  .fuel-range::-moz-range-thumb { width: 18px; height: 18px; border-radius: 50%; background: var(--accent); border: 2px solid var(--bg); }
+  .fuel-toggle-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
+  .fuel-toggle-row:last-child { margin-bottom: 0; }
+  .fuel-toggle-label { font-size: 11px; color: var(--faint); font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 8px; }
+  .fuel-btn { font-size: 12px; padding: 7px 12px; border: 1px solid var(--border); border-radius: 20px; background: transparent; color: var(--muted); cursor: pointer; font-family: inherit; font-weight: 600; transition: all 0.15s; }
+  .fuel-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .fuel-unit-row { display: flex; gap: 4px; background: var(--bg); padding: 3px; border-radius: 8px; float: right; margin-top: -2px; }
+  .fuel-unit-btn { font-size: 10px; padding: 4px 10px; border: none; border-radius: 5px; background: transparent; color: var(--faint); cursor: pointer; font-family: inherit; font-weight: 700; }
+  .fuel-unit-btn.active { background: var(--border2); color: var(--accent-bright); }
+  .fuel-results-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px; }
+  .fuel-stat { background: var(--bg); border-radius: 10px; padding: 10px 10px; border: 1px solid var(--border); }
+  .fuel-stat-label { font-size: 10px; color: var(--faint); margin-bottom: 4px; }
+  .fuel-stat-num { font-size: 20px; font-weight: 800; color: var(--accent-light); line-height: 1; }
+  .fuel-stat-unit { font-size: 10px; color: var(--faint); margin-top: 2px; }
+  .fuel-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .fuel-table tr { border-bottom: 1px solid var(--border); }
+  .fuel-table tr:last-child { border-bottom: none; }
+  .fuel-table td { padding: 8px 4px; color: var(--muted); }
+  .fuel-table td:last-child { text-align: right; font-weight: 700; color: var(--text); }
+  .fuel-elec-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .fuel-elec-table thead td { font-size: 9px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--faint); padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+  .fuel-elec-table tbody tr { border-bottom: 1px solid var(--border); }
+  .fuel-elec-table tbody tr:last-child { border-bottom: none; }
+  .fuel-elec-table td { padding: 9px 4px; vertical-align: top; color: var(--muted); }
+  .fuel-elec-table td:nth-child(2), .fuel-elec-table td:nth-child(3) { font-weight: 700; text-align: right; white-space: nowrap; color: var(--text); }
+  .fuel-elec-name { font-weight: 700; color: var(--text); display: block; font-size: 12px; }
+  .fuel-elec-source { font-size: 10px; color: var(--faint); margin-top: 2px; }
+  .fuel-tip { border-left: 3px solid var(--accent); background: var(--card2); color: var(--muted); font-size: 12px; line-height: 1.55; padding: 10px 14px; border-radius: 0 10px 10px 0; margin-top: 12px; }
+  .fuel-warn { background: #2d1a00; color: #f59e0b; font-size: 12px; line-height: 1.55; padding: 10px 14px; border-radius: 10px; margin-top: 10px; border: 1px solid #f59e0b44; }
+  .fuel-no-fuel { text-align: center; padding: 24px 12px; color: var(--faint); font-size: 13px; line-height: 1.6; }
+  .fuel-divider { font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--faint); margin: 10px 0 8px; }
+  .fuel-disclaimer { margin: 0 20px 60px; font-size: 11px; color: var(--faint); line-height: 1.6; padding: 12px 14px; background: var(--card); border-radius: 10px; border: 1px solid var(--border); }
+
 </style>
 </head>
 <body>
 <div id="app">
+<div id="pin-gate">
+  <div class="pin-logo">🏊🚴🏃</div>
+  <div class="pin-title">Ironman Tracker</div>
+  <div class="pin-subtitle" id="pin-subtitle">Enter your PIN to continue</div>
+  <div class="pin-dots">
+    <div class="pin-dot" id="pd0"></div>
+    <div class="pin-dot" id="pd1"></div>
+    <div class="pin-dot" id="pd2"></div>
+    <div class="pin-dot" id="pd3"></div>
+  </div>
+  <div class="pin-keypad">
+    <button class="pin-key" onclick="pinPress(1)">1</button>
+    <button class="pin-key" onclick="pinPress(2)">2</button>
+    <button class="pin-key" onclick="pinPress(3)">3</button>
+    <button class="pin-key" onclick="pinPress(4)">4</button>
+    <button class="pin-key" onclick="pinPress(5)">5</button>
+    <button class="pin-key" onclick="pinPress(6)">6</button>
+    <button class="pin-key" onclick="pinPress(7)">7</button>
+    <button class="pin-key" onclick="pinPress(8)">8</button>
+    <button class="pin-key" onclick="pinPress(9)">9</button>
+    <button class="pin-key empty"></button>
+    <button class="pin-key" onclick="pinPress(0)">0</button>
+    <button class="pin-key del" onclick="pinDel()">⌫</button>
+  </div>
+  <div class="pin-error" id="pin-error"></div>
+  <div class="pin-setup" id="pin-setup-link" onclick="pinReset()" style="display:none">Reset PIN</div>
+</div>
   <div id="today-screen" class="screen active">
     <div class="page-header">
       <span id="today-date" style="font-size:12px;color:var(--faint);font-weight:600;letter-spacing:0.08em;text-transform:uppercase"></span>
@@ -231,6 +323,73 @@
     </div>
   </div>
 
+  <div id="fuel-screen" class="screen">
+    <div class="fuel-header">
+      <div class="fuel-header-title">Fueling</div>
+      <div class="fuel-header-sub">Carbohydrate &amp; electrolyte targets for training</div>
+    </div>
+
+    <!-- Inputs -->
+    <div class="fuel-section">
+      <div class="fuel-section-title">
+        Your session
+        <span class="fuel-unit-row">
+          <button class="fuel-unit-btn active" id="f-kg-btn" onclick="fuelSetUnit('metric')">kg</button>
+          <button class="fuel-unit-btn" id="f-lb-btn" onclick="fuelSetUnit('imperial')">lb</button>
+        </span>
+      </div>
+      <div class="fuel-slider-group">
+        <div class="fuel-slider-label"><span>Duration</span><span class="fuel-slider-val" id="f-dur-out">1h 30m</span></div>
+        <input type="range" class="fuel-range" id="f-duration" min="20" max="420" step="5" value="90" oninput="fuelCalc()">
+      </div>
+      <div class="fuel-slider-group">
+        <div class="fuel-slider-label"><span id="f-wt-label">Body weight</span><span class="fuel-slider-val" id="f-wt-out">88 kg</span></div>
+        <input type="range" class="fuel-range" id="f-weight" min="40" max="130" step="1" value="88" oninput="fuelCalc()">
+      </div>
+      <div class="fuel-slider-group">
+        <div class="fuel-slider-label"><span>Heat / sweat rate</span><span class="fuel-slider-val" id="f-heat-out">Moderate</span></div>
+        <input type="range" class="fuel-range" id="f-heat" min="1" max="3" step="1" value="2" oninput="fuelCalc()">
+      </div>
+    </div>
+
+    <!-- Intensity & Conditions -->
+    <div class="fuel-section">
+      <div class="fuel-section-title">Conditions</div>
+      <div class="fuel-toggle-label">Effort level</div>
+      <div class="fuel-toggle-row" id="f-intensity-group">
+        <button class="fuel-btn" data-val="easy" onclick="fuelSetIntensity(this)">Easy / Z1–Z2</button>
+        <button class="fuel-btn active" data-val="moderate" onclick="fuelSetIntensity(this)">Moderate / Z3</button>
+        <button class="fuel-btn" data-val="hard" onclick="fuelSetIntensity(this)">Hard / Z4–Z5</button>
+      </div>
+      <div class="fuel-toggle-label" style="margin-top:14px">Conditions</div>
+      <div class="fuel-toggle-row" id="f-cond-group">
+        <button class="fuel-btn active" data-val="cool" onclick="fuelSetCond(this)">&lt;15°C Cool</button>
+        <button class="fuel-btn" data-val="warm" onclick="fuelSetCond(this)">15–25°C Warm</button>
+        <button class="fuel-btn" data-val="hot" onclick="fuelSetCond(this)">&gt;25°C Hot</button>
+      </div>
+    </div>
+
+    <!-- Carb results -->
+    <div class="fuel-section">
+      <div class="fuel-section-title">Carbohydrate targets</div>
+      <div id="f-carb-results"></div>
+    </div>
+
+    <!-- Electrolyte results -->
+    <div class="fuel-section">
+      <div class="fuel-section-title">Electrolyte targets</div>
+      <div id="f-elec-results"></div>
+    </div>
+
+    <!-- Mix guide -->
+    <div class="fuel-section">
+      <div class="fuel-section-title">How to mix it</div>
+      <div id="f-mix-results"></div>
+    </div>
+
+    <div class="fuel-disclaimer">Targets are evidence-based estimates. Individual needs vary with fitness, heat acclimatisation, and gut tolerance. Always practise race-day fueling in training first.</div>
+  </div>
+
   <div id="tabbar">
     <button class="tab active" onclick="showTab('today',this)">
       <span class="tab-icon">🏠</span><span class="tab-label">Today</span>
@@ -240,6 +399,9 @@
     </button>
     <button class="tab" onclick="showTab('history',this)">
       <span class="tab-icon">📈</span><span class="tab-label">History</span>
+    </button>
+    <button class="tab" onclick="showTab('fuel',this)">
+      <span class="tab-icon">⚡</span><span class="tab-label">Fuel</span>
     </button>
   </div>
 </div>
@@ -742,6 +904,7 @@ function showTab(name, el) {
   if(name==="today") renderToday();
   if(name==="plan") renderPlan(activePlanWeek);
   if(name==="history") renderHistory();
+  if(name==="fuel") fuelCalc();
 }
 
 // --- TODAY ---
@@ -788,15 +951,22 @@ function renderToday() {
   document.getElementById("progress-fill").style.width=total>0?`${(completed/total)*100}%`:"0%";
   document.getElementById("progress-text").textContent=`${completed} of ${total} sessions done`;
 
-  // Pills
+  // Pills — calculate real calendar date for each day of this week
+  const weekStart = getCycleStart();
+  weekStart.setDate(weekStart.getDate() + wi * 7); // Monday of this plan week
   let pillsHtml="";
   week.days.forEach((d,i)=>{
     const c=TYPE[d.type],l=getLog(wi,i),isToday=d.day===todayName;
     const loggedType=l?.activityType||d.type;
     const dc=TYPE[loggedType]||c;
+    const dayDate = new Date(weekStart);
+    dayDate.setDate(weekStart.getDate() + i);
+    const dateNum = dayDate.getDate();
+    const dateMonth = dayDate.toLocaleDateString("en-GB",{month:"short"});
     pillsHtml+=`<div class="day-pill" style="border-color:${isToday?dc.color:"var(--border)"};background:${l?.completed?dc.color+"33":"var(--card)"}" ${d.type!=="rest"?`onclick="openLog(${wi},${i})"`:""}>
       <div class="day-pill-day" style="color:${isToday?dc.color:"var(--faint)"}">${d.day}</div>
       <div class="day-pill-icon">${dc.icon}</div>
+      <div style="font-size:9px;color:${isToday?dc.color:"var(--faint)"};font-weight:600;margin-top:1px">${dateNum} ${dateMonth}</div>
       ${l?.completed?'<div class="day-pill-check">✓</div>':""}
     </div>`;
   });
@@ -997,7 +1167,10 @@ function switchLogType(newType) {
   const session = logState.session;
   const titleChanged = newType !== session.type;
   const displayTitle = titleChanged ? `${cfg.icon} ${cfg.label}` : session.label;
-  const subtitle = titleChanged ? `${session.day} · Week ${logState.wi+1} · planned: ${session.label}` : `${session.day} · Week ${logState.wi+1}`;
+  const _ws2 = new Date(getCycleStart()); _ws2.setDate(_ws2.getDate() + logState.wi*7);
+  const _sd2 = new Date(_ws2); _sd2.setDate(_ws2.getDate() + logState.di);
+  const _dateStr2 = _sd2.toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"});
+  const subtitle = titleChanged ? `${session.day} ${_dateStr2} · Wk ${logState.wi+1} · planned: ${session.label}` : `${session.day} ${_dateStr2} · Week ${logState.wi+1}`;
   document.getElementById("log-session-card").style.cssText=`border-color:${cfg.color};background-color:${cfg.bg}`;
   document.getElementById("log-session-card").innerHTML=`<span class="session-icon">${cfg.icon}</span><div style="flex:1"><div class="session-title" style="color:${cfg.color}">${displayTitle}</div><div class="session-day">${subtitle}</div></div><span class="badge" style="color:${cfg.color};border-color:${cfg.color}55;background:${cfg.color}22">${cfg.label}</span>`;
   document.getElementById("log-detail-box").style.borderColor=cfg.color+"44";
@@ -1017,7 +1190,11 @@ function openLog(wi, di, cycleNum) {
   const savedCfg = TYPE[savedType] || cfg;
   const titleChanged = savedType !== session.type;
   const displayTitle = titleChanged ? `${savedCfg.icon} ${savedCfg.label}` : session.label;
-  const subtitle = titleChanged ? `${session.day} · Week ${wi+1} · planned: ${session.label}` : `${session.day} · Week ${wi+1}`;
+  // Calculate real calendar date for this session
+  const _ws = new Date(getCycleStart()); _ws.setDate(_ws.getDate() + wi*7);
+  const _sd = new Date(_ws); _sd.setDate(_ws.getDate() + di);
+  const _dateStr = _sd.toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"});
+  const subtitle = titleChanged ? `${session.day} ${_dateStr} · Wk ${wi+1} · planned: ${session.label}` : `${session.day} ${_dateStr} · Week ${wi+1}`;
   document.getElementById("log-session-card").innerHTML=`<span class="session-icon">${savedCfg.icon}</span><div style="flex:1"><div class="session-title" style="color:${savedCfg.color}">${displayTitle}</div><div class="session-day">${subtitle}</div></div><span class="badge" style="color:${savedCfg.color};border-color:${savedCfg.color}55;background:${savedCfg.color}22">${savedCfg.label}</span>`;
   document.getElementById("log-detail-box").style.borderColor=savedCfg.color+"44";
   document.getElementById("log-detail-text").textContent=session.detail;
@@ -1218,7 +1395,262 @@ function renderHistory() {
 
 }
 
+
+// --- PIN Gate ---
+let pinEntry = [];
+const PIN_KEY = "app_pin";
+const SESSION_KEY = "pin_session";
+
+function pinUnlock() {
+  document.getElementById("pin-gate").classList.add("hidden");
+  // Store session so user doesn't re-enter PIN for the rest of the browser session
+  sessionStorage.setItem(SESSION_KEY, "1");
+}
+
+function pinSetup() {
+  document.getElementById("pin-subtitle").textContent = "Choose a 4-digit PIN";
+  document.getElementById("pin-setup-link").style.display = "none";
+}
+
+function initPin() {
+  const stored = localStorage.getItem(PIN_KEY);
+  // Already authenticated this session
+  if (sessionStorage.getItem(SESSION_KEY)) { pinUnlock(); return; }
+  if (!stored) {
+    // No PIN set yet — setup mode
+    document.getElementById("pin-subtitle").textContent = "Set a 4-digit PIN to protect your data";
+    document.getElementById("pin-setup-link").style.display = "none";
+  } else {
+    document.getElementById("pin-subtitle").textContent = "Enter your PIN";
+    document.getElementById("pin-setup-link").style.display = "block";
+  }
+}
+
+function pinPress(n) {
+  if (pinEntry.length >= 4) return;
+  pinEntry.push(n);
+  updatePinDots();
+  if (pinEntry.length === 4) setTimeout(pinSubmit, 120);
+}
+
+function pinDel() {
+  if (pinEntry.length === 0) return;
+  pinEntry.pop();
+  updatePinDots();
+  document.getElementById("pin-error").textContent = "";
+  document.querySelectorAll(".pin-dot").forEach(d => d.classList.remove("error"));
+}
+
+function updatePinDots() {
+  for (let i = 0; i < 4; i++) {
+    const dot = document.getElementById("pd" + i);
+    dot.classList.toggle("filled", i < pinEntry.length);
+    dot.classList.remove("error");
+  }
+}
+
+function pinSubmit() {
+  const entered = pinEntry.join("");
+  const stored = localStorage.getItem(PIN_KEY);
+  if (!stored) {
+    // First time — save PIN
+    localStorage.setItem(PIN_KEY, entered);
+    pinEntry = [];
+    updatePinDots();
+    pinUnlock();
+  } else if (entered === stored) {
+    pinEntry = [];
+    pinUnlock();
+  } else {
+    // Wrong PIN
+    document.querySelectorAll(".pin-dot").forEach(d => { d.classList.remove("filled"); d.classList.add("error"); });
+    document.getElementById("pin-error").textContent = "Incorrect PIN — try again";
+    setTimeout(() => {
+      pinEntry = [];
+      updatePinDots();
+      document.getElementById("pin-error").textContent = "";
+    }, 800);
+  }
+}
+
+function pinReset() {
+  if (confirm("Reset your PIN? You'll be asked to set a new one.")) {
+    localStorage.removeItem(PIN_KEY);
+    sessionStorage.removeItem(SESSION_KEY);
+    pinEntry = [];
+    updatePinDots();
+    document.getElementById("pin-subtitle").textContent = "Set a new 4-digit PIN";
+    document.getElementById("pin-setup-link").style.display = "none";
+    document.getElementById("pin-error").textContent = "";
+  }
+}
+
+
+// --- Fuel Calculator ---
+let fuelUnit = 'metric';
+let fuelIntensity = 'moderate';
+let fuelCond = 'cool';
+const fuelIntensityRates = { easy: 30, moderate: 50, hard: 75 };
+const fuelSweatSodium = { low: 600, medium: 900, high: 1200 };
+const fuelCondMultiplier = { cool: 0.8, warm: 1.0, hot: 1.35 };
+const fuelHeatLabels = ['', 'Low', 'Moderate', 'High'];
+
+function fuelSetUnit(u) {
+  fuelUnit = u;
+  document.getElementById('f-kg-btn').classList.toggle('active', u === 'metric');
+  document.getElementById('f-lb-btn').classList.toggle('active', u === 'imperial');
+  const slider = document.getElementById('f-weight');
+  if (u === 'imperial') {
+    slider.min = 88; slider.max = 286; slider.step = 1;
+    slider.value = Math.round(parseInt(slider.value) * 2.205);
+  } else {
+    slider.min = 40; slider.max = 130; slider.step = 1;
+    slider.value = Math.round(parseInt(slider.value) / 2.205);
+  }
+  fuelCalc();
+}
+
+function fuelSetIntensity(btn) {
+  document.querySelectorAll('#f-intensity-group .fuel-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  fuelIntensity = btn.dataset.val;
+  fuelCalc();
+}
+
+function fuelSetCond(btn) {
+  document.querySelectorAll('#f-cond-group .fuel-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  fuelCond = btn.dataset.val;
+  fuelCalc();
+}
+
+function fuelFmtDur(min) {
+  const h = Math.floor(min / 60), m = min % 60;
+  return h > 0 ? (m > 0 ? `${h}h ${m}m` : `${h}h`) : `${m}m`;
+}
+
+function fuelCalc() {
+  const dur = parseInt(document.getElementById('f-duration').value);
+  const wtRaw = parseInt(document.getElementById('f-weight').value);
+  const heatLevel = parseInt(document.getElementById('f-heat').value);
+  const wtKg = fuelUnit === 'metric' ? wtRaw : Math.round(wtRaw / 2.205);
+
+  document.getElementById('f-dur-out').textContent = fuelFmtDur(dur);
+  document.getElementById('f-wt-out').textContent = fuelUnit === 'metric' ? `${wtRaw} kg` : `${wtRaw} lb`;
+  document.getElementById('f-heat-out').textContent = fuelHeatLabels[heatLevel];
+
+  const hrs = dur / 60;
+  const rate = fuelIntensityRates[fuelIntensity];
+
+  // Carbs
+  let totalCarbs = 0, carbNote = '', showWarn = false;
+  if (dur <= 60) {
+    totalCarbs = 0;
+    carbNote = 'No mid-session carbs needed. Stay hydrated and focus on recovery nutrition after.';
+  } else if (dur <= 75) {
+    totalCarbs = Math.round(rate * 0.3);
+    carbNote = 'Optional top-up toward the end. A small gel or half a banana is enough.';
+  } else {
+    const fuelingHrs = (dur - 20) / 60;
+    totalCarbs = Math.round(rate * fuelingHrs);
+    if (totalCarbs > 60 * hrs) showWarn = true;
+    carbNote = fuelIntensity === 'hard'
+      ? 'At race pace, use a glucose + fructose blend (2:1 ratio) to reach up to 90g/hr. Train your gut during long sessions first.'
+      : 'Start fueling 20–30 min in. Little and often beats one large hit.';
+  }
+
+  const waterMl = Math.round(wtKg * 6 * hrs * fuelCondMultiplier[fuelCond]);
+  const bottles = Math.max(1, Math.round(waterMl / 500));
+  const carbsPer500 = totalCarbs > 0 ? Math.round(totalCarbs / (waterMl / 500)) : 0;
+  const concPct = (totalCarbs > 0 && waterMl > 0) ? ((totalCarbs / (waterMl + totalCarbs)) * 100).toFixed(1) : 0;
+  const tsp = (totalCarbs / 4).toFixed(1);
+  const gels = Math.round(totalCarbs / 22);
+
+  const carbDiv = document.getElementById('f-carb-results');
+  if (totalCarbs === 0) {
+    carbDiv.innerHTML = `<div class="fuel-no-fuel">No mid-session carbs needed for efforts under 60 minutes.<br>Top up glycogen before and recover after.</div>
+      <div class="fuel-results-grid" style="margin-top:12px">
+        <div class="fuel-stat"><div class="fuel-stat-label">Water target</div><div class="fuel-stat-num">${waterMl}</div><div class="fuel-stat-unit">ml</div></div>
+      </div>
+      <div class="fuel-tip">${carbNote}</div>`;
+  } else {
+    carbDiv.innerHTML = `
+      <div class="fuel-results-grid">
+        <div class="fuel-stat"><div class="fuel-stat-label">Total carbs</div><div class="fuel-stat-num">${totalCarbs}</div><div class="fuel-stat-unit">grams</div></div>
+        <div class="fuel-stat"><div class="fuel-stat-label">Rate</div><div class="fuel-stat-num">${rate}</div><div class="fuel-stat-unit">g / hour</div></div>
+        <div class="fuel-stat"><div class="fuel-stat-label">Or ~</div><div class="fuel-stat-num">${gels}</div><div class="fuel-stat-unit">gels (22g)</div></div>
+      </div>
+      <table class="fuel-table">
+        <tr><td>Water target</td><td>${waterMl} ml</td></tr>
+        <tr><td>Sugar per 500ml bottle</td><td>${carbsPer500}g</td></tr>
+        <tr><td>That's roughly</td><td>${(carbsPer500/4).toFixed(1)} tsp · ${(carbsPer500/12).toFixed(1)} tbsp</td></tr>
+        <tr><td>Solution concentration</td><td>~${concPct}%</td></tr>
+      </table>
+      ${showWarn ? `<div class="fuel-warn">⚡ Above 60g/hr needs a mixed glucose + fructose source to avoid GI distress. Gut training is key.</div>` : ''}
+      <div class="fuel-tip">${carbNote}</div>`;
+  }
+
+  // Electrolytes
+  const sweatRate = heatLevel === 1 ? 'low' : heatLevel === 2 ? 'medium' : 'high';
+  const sodiumPerLitre = fuelSweatSodium[sweatRate];
+  const litres = waterMl / 1000;
+  const sodium = Math.round(sodiumPerLitre * litres);
+  const potassium = Math.round(sodium * 0.18);
+  const magnesium = Math.round(wtKg * 0.08 * Math.min(hrs, 3));
+  const chloride = Math.round(sodium * 0.55);
+  const sodiumPerBottle = Math.round(sodium / bottles);
+  const potPerBottle = Math.round(potassium / bottles);
+  const magPerBottle = Math.round(magnesium / bottles);
+
+  document.getElementById('f-elec-results').innerHTML = `
+    <div class="fuel-results-grid">
+      <div class="fuel-stat"><div class="fuel-stat-label">Sodium</div><div class="fuel-stat-num">${sodium}</div><div class="fuel-stat-unit">mg total</div></div>
+      <div class="fuel-stat"><div class="fuel-stat-label">Potassium</div><div class="fuel-stat-num">${potassium}</div><div class="fuel-stat-unit">mg total</div></div>
+      <div class="fuel-stat"><div class="fuel-stat-label">Magnesium</div><div class="fuel-stat-num">${magnesium}</div><div class="fuel-stat-unit">mg total</div></div>
+    </div>
+    <table class="fuel-elec-table">
+      <thead><tr><td>Electrolyte</td><td>Total</td><td>Per 500ml</td></tr></thead>
+      <tbody>
+        <tr><td><span class="fuel-elec-name">Sodium</span><span class="fuel-elec-source">Salt, electrolyte tabs</span></td><td>${sodium}mg</td><td>${sodiumPerBottle}mg</td></tr>
+        <tr><td><span class="fuel-elec-name">Potassium</span><span class="fuel-elec-source">Banana, pickle juice</span></td><td>${potassium}mg</td><td>${potPerBottle}mg</td></tr>
+        <tr><td><span class="fuel-elec-name">Magnesium</span><span class="fuel-elec-source">Tabs, nut butter</span></td><td>${magnesium}mg</td><td>${magPerBottle}mg</td></tr>
+        <tr><td><span class="fuel-elec-name">Chloride</span><span class="fuel-elec-source">Covered by most salt sources</span></td><td>${chloride}mg</td><td>${Math.round(chloride/bottles)}mg</td></tr>
+      </tbody>
+    </table>
+    <div class="fuel-tip">${fuelCond === 'hot' ? "In hot conditions sweat sodium losses increase sharply. Don't rely on thirst — schedule sips every 10–15 min." : fuelCond === 'warm' ? 'Warm conditions: start drinking before you feel thirsty. Light salty snacks help replace sodium on longer efforts.' : 'Cool conditions: sweat losses are lower, but electrolytes still matter on efforts over 90 minutes.'}</div>`;
+
+  // Mix guide
+  const mixDiv = document.getElementById('f-mix-results');
+  if (totalCarbs === 0) {
+    const saltG = (sodium / 1000 * 2.5).toFixed(1);
+    mixDiv.innerHTML = `
+      <div class="fuel-results-grid">
+        <div class="fuel-stat"><div class="fuel-stat-label">Water</div><div class="fuel-stat-num">${waterMl}</div><div class="fuel-stat-unit">ml total</div></div>
+        <div class="fuel-stat"><div class="fuel-stat-label">Salt to add</div><div class="fuel-stat-num">${saltG}</div><div class="fuel-stat-unit">g</div></div>
+      </div>
+      <div class="fuel-tip">Plain water with a small pinch of salt is all you need for shorter efforts.</div>`;
+  } else {
+    const saltG = (sodium / 1000 * 2.54).toFixed(1);
+    const saltTsp = (sodium / 1000 * 2.54 / 5.69).toFixed(2);
+    mixDiv.innerHTML = `
+      <div class="fuel-results-grid">
+        <div class="fuel-stat"><div class="fuel-stat-label">Water</div><div class="fuel-stat-num">${waterMl}</div><div class="fuel-stat-unit">ml (${bottles} bottles)</div></div>
+        <div class="fuel-stat"><div class="fuel-stat-label">Sugar</div><div class="fuel-stat-num">${totalCarbs}</div><div class="fuel-stat-unit">g (${tsp} tsp)</div></div>
+        <div class="fuel-stat"><div class="fuel-stat-label">Salt</div><div class="fuel-stat-num">${saltG}</div><div class="fuel-stat-unit">g (~${saltTsp} tsp)</div></div>
+      </div>
+      <div class="fuel-divider">Per 500ml bottle</div>
+      <table class="fuel-table">
+        <tr><td>Water</td><td>500 ml</td></tr>
+        <tr><td>Sugar (table / maltodextrin)</td><td>${carbsPer500}g · ${(carbsPer500/4).toFixed(1)} tsp</td></tr>
+        <tr><td>Salt (sodium chloride)</td><td>${(sodiumPerBottle/1000*2.54).toFixed(1)}g · ${(sodiumPerBottle/1000*2.54/5.69).toFixed(2)} tsp</td></tr>
+        <tr><td>Potassium (electrolyte tab)</td><td>${potPerBottle}mg</td></tr>
+      </table>
+      <div class="fuel-tip" style="margin-top:12px">Mix sugar and salt into warm water first, then top to 500ml with cold water. Add a squeeze of lemon for flavour.</div>`;
+  }
+}
+
 // --- Init ---
+initPin();
 renderToday();
 renderPlan(0);
 </script>
