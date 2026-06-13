@@ -1880,7 +1880,7 @@ function handleStravaCsv(event) {
       // Find columns by exact Strava header name
       const col = (...names) => {
         for (const n of names) {
-          const i = headers.indexOf(n);
+          const i = headers.findIndex(h => h === n);
           if (i >= 0) return i;
         }
         return -1;
@@ -1895,6 +1895,7 @@ function handleStravaCsv(event) {
       const iElev  = col("Elevation Gain");
       const iAvgHR = col("Average Heart Rate");
       const iMaxHR = col("Max Heart Rate");
+      console.log(`HR cols — AvgHR:${iAvgHR} MaxHR:${iMaxHR}`);
 
       if (iDate < 0 || iType < 0) {
         alert("Could not find required columns. Make sure this is the Strava activities.csv export.");
@@ -1937,6 +1938,7 @@ function handleStravaCsv(event) {
           date,
           source: "strava",
         });
+        if (activities.length === 1) console.log("First activity:", activities[0]);
       }
 
       if (activities.length === 0) {
