@@ -1081,16 +1081,6 @@ function renderHistory() {
     </div>`;
   }).join("");
 
-  // Render strava import bar — inject it programmatically so it works
-  // regardless of whether the HTML has the strava-import-bar div or not
-  let importBarEl = document.getElementById("strava-import-bar");
-  if (!importBarEl) {
-    // Create and insert before hist-stats if missing from HTML
-    importBarEl = document.createElement("div");
-    importBarEl.id = "strava-import-bar";
-    const statsEl = document.getElementById("hist-stats");
-    if (statsEl) statsEl.parentNode.insertBefore(importBarEl, statsEl);
-  }
   renderStravaImportBar();
 
   if (merged.length === 0) {
@@ -1189,15 +1179,6 @@ function appInit() {
   }
 
   attachDelegatedHandlers();
-  // Ensure strava-import-bar exists in the DOM regardless of HTML version
-  if (!document.getElementById("strava-import-bar")) {
-    const bar = document.createElement("div");
-    bar.id = "strava-import-bar";
-    bar.style.cssText = "background:#1a0d08;border:1px solid #fc4c0244;border-radius:12px;padding:12px 14px;margin:0 20px 16px;";
-    const statsEl = document.getElementById("hist-stats");
-    if (statsEl) statsEl.parentNode.insertBefore(bar, statsEl);
-  }
-  renderStravaImportBar();
   setTimeout(supaSync, 300);
   renderToday();
   renderPlan(0);
