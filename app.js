@@ -1839,16 +1839,18 @@ function handleStravaCsv(event) {
 
       // Parse header row — Strava CSV headers vary by locale so find by name
       const headers = parseCSVLine(lines[0]).map(h => h.trim().toLowerCase().replace(/[^a-z0-9]/g,"_"));
-      const col = name => headers.indexOf(name);
+      console.log("Strava CSV headers:", headers);
 
-      // Map common Strava CSV column names
-      const iDate      = col("activity_date") >= 0 ? col("activity_date") : col("date");
-      const iName      = col("activity_name") >= 0 ? col("activity_name") : col("name");
-      const iType      = col("activity_type") >= 0 ? col("activity_type") : col("type");
-      const iDist      = col("distance") >= 0 ? col("distance") : -1;
-      const iTime      = col("moving_time") >= 0 ? col("moving_time") : col("elapsed_time") >= 0 ? col("elapsed_time") : -1;
-      const iElev      = col("elevation_gain") >= 0 ? col("elevation_gain") : col("total_elevation_gain") >= 0 ? col("total_elevation_gain") : -1;
-      const iId        = col("activity_id") >= 0 ? col("activity_id") : col("id") >= 0 ? col("id") : -1;
+      // Map common Strava CSV column names — try multiple variants
+      const col = (...names) => { for (const n of names) { const i = headers.indexOf(n); if (i >= 0) return i; } return -1; };
+
+      const iDate = col("activity_date", "date", "start_date");
+      const iName = col("activity_name", "name", "title");
+      const iType = col("activity_type", "type", "sport_type");
+      const iDist = col("distance", "distance_km", "distance__km_");
+      const iTime = col("moving_time", "elapsed_time", "moving_time__seconds_", "elapsed_time__seconds_");
+      const iElev = col("elevation_gain", "total_elevation_gain", "elevation_gain__m_", "elev_high");
+      const iId   = col("activity_id", "id", "activity_id__id_");
 
       if (iDate < 0 || iType < 0) {
         alert("Could not find required columns (date, type) in CSV. Make sure you're uploading the Strava activities.csv file.");
@@ -1861,12 +1863,12 @@ function handleStravaCsv(event) {
         if (cols.length < 3) continue;
 
         const rawDate = cols[iDate]?.trim() || "";
-        const rawType = cols[iType]?.trim() || "";
-        const name    = cols[iName]?.trim() || "Strava Activity";
-        const distRaw = iDist >= 0 ? cols[iDist]?.trim() : "";
-        const timeRaw = iTime >= 0 ? cols[iTime]?.trim() : "";
-        const elevRaw = iElev >= 0 ? cols[iElev]?.trim() : "";
-        const idRaw   = iId  >= 0 ? cols[iId]?.trim()  : String(i);
+        const rawType = iType >= 0 ? (cols[iType]?.trim() || "") : "";
+        const name    = iName >= 0 ? (cols[iName]?.trim() || "Strava Activity") : "Strava Activity";
+        const distRaw = iDist >= 0 ? (cols[iDist]?.trim() || "0") : "0";
+        const timeRaw = iTime >= 0 ? (cols[iTime]?.trim() || "0") : "0";
+        const elevRaw = iElev >= 0 ? (cols[iElev]?.trim() || "0") : "0";
+        const idRaw   = iId  >= 0 ? (cols[iId]?.trim()  || String(i)) : String(i);
 
         // Parse date — Strava uses "MMM DD, YYYY, HH:MM:SS AM" or ISO formats
         const date = parseStravaDate(rawDate);
