@@ -8,6 +8,7 @@
 <meta name="apple-mobile-web-app-title" content="Ironman">
 <meta name="theme-color" content="#0e0818">
 <title>Ironman Tracker</title>
+<link rel="apple-touch-icon" href="icon-192.png">
 <link rel="manifest" href="manifest.json">
 <script src="app.js" defer></script>
 <style>
@@ -522,5 +523,12 @@
 </div>
 
 
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').catch(e => console.warn('SW reg failed:', e));
+      });
+    }
+  </script>
 </body>
 </html>
