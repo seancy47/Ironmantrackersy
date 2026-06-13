@@ -821,11 +821,33 @@ function buildLogForm(session, log, isReadOnly) {
   const distanceHtml = isBrick
     ? `<div class="input-row"><div class="input-group"><label class="input-label">Bike (km)</label><input type="number" id="bike-dist" placeholder="e.g. 60" value="${log?.bikeDistance||""}" step="0.1" min="0"></div><div class="input-group"><label class="input-label">Run (km)</label><input type="number" id="run-dist" placeholder="e.g. 5" value="${log?.runDistance||""}" step="0.1" min="0"></div></div>`
     : `<div class="input-group"><label class="input-label">Distance (km)</label><input type="number" id="distance" placeholder="Target: ${session.targetDistance||"--"} km" value="${log?.distance||""}" step="0.1" min="0"></div>`;
+  // Decompose stored total-minutes back into h/m/s for display
+  const storedMins = parseFloat(log?.duration||0);
+  const prefillH = storedMins > 0 ? Math.floor(storedMins / 60) : "";
+  const prefillM = storedMins > 0 ? Math.floor(storedMins % 60) : "";
+  const prefillS = storedMins > 0 ? Math.round((storedMins * 60) % 60) : "";
+  const durationHtml = `<div class="input-group">
+    <label class="input-label">Duration</label>
+    <div style="display:flex;gap:8px;align-items:flex-end">
+      <div style="flex:1;text-align:center">
+        <input type="number" id="dur-h" placeholder="0" value="${prefillH}" min="0" max="23" style="text-align:center">
+        <div style="font-size:10px;color:var(--faint);font-weight:700;letter-spacing:0.06em;text-transform:uppercase;margin-top:4px">hrs</div>
+      </div>
+      <div style="flex:1;text-align:center">
+        <input type="number" id="dur-m" placeholder="0" value="${prefillM}" min="0" max="59" style="text-align:center">
+        <div style="font-size:10px;color:var(--faint);font-weight:700;letter-spacing:0.06em;text-transform:uppercase;margin-top:4px">min</div>
+      </div>
+      <div style="flex:1;text-align:center">
+        <input type="number" id="dur-s" placeholder="0" value="${prefillS}" min="0" max="59" style="text-align:center">
+        <div style="font-size:10px;color:var(--faint);font-weight:700;letter-spacing:0.06em;text-transform:uppercase;margin-top:4px">sec</div>
+      </div>
+    </div>
+  </div>`;
   let html = `<div class="form-section">
     <div style="font-size:10px;font-weight:800;letter-spacing:2px;color:var(--faint);margin-bottom:16px">LOG YOUR WORKOUT</div>
     ${typePickerHtml}
     ${distanceHtml}
-    <div class="input-group"><label class="input-label">Duration (mins)</label><input type="number" id="duration" placeholder="e.g. 45" value="${log?.duration||""}" min="0"></div>
+    ${durationHtml}
     <div class="input-group"><label class="input-label">How did it feel?</label><div class="feelings">${feelingsHtml}</div></div>
     <div class="input-group"><label class="input-label">Notes (optional)</label><textarea id="notes" placeholder="How did it go? Anything to remember...">${log?.notes||""}</textarea></div>
   </div>`;
@@ -838,13 +860,16 @@ function buildLogForm(session, log, isReadOnly) {
 }
 
 function switchLogType(newType) {
-  const dur = document.getElementById("duration")?.value||"";
+  const dH = parseFloat(document.getElementById("dur-h")?.value||0);
+  const dM = parseFloat(document.getElementById("dur-m")?.value||0);
+  const dS = parseFloat(document.getElementById("dur-s")?.value||0);
+  const totalMins = dH * 60 + dM + dS / 60;
   const dist = document.getElementById("distance")?.value||"";
   const bikeDist = document.getElementById("bike-dist")?.value||"";
   const runDist = document.getElementById("run-dist")?.value||"";
   const notes = document.getElementById("notes")?.value||"";
   const log = getLogs()[logKey(logState.cn, logState.wi, logState.di)] || null;
-  const patchedLog = {...log, duration:dur, distance:dist, bikeDistance:bikeDist, runDistance:runDist, notes};
+  const patchedLog = {...log, duration: totalMins > 0 ? String(totalMins) : "", distance:dist, bikeDistance:bikeDist, runDistance:runDist, notes};
   logState.loggedType = newType;
 
   // Update session card header and screen background to match new type
@@ -899,10 +924,15 @@ function saveLog() {
   const {wi,di,session}=logState;
   const loggedType = logState.loggedType || session.type;
   const isBrick = loggedType==="brick";
+  // Convert h/m/s to total minutes stored as a decimal
+  const dH = parseFloat(document.getElementById("dur-h")?.value||0);
+  const dM = parseFloat(document.getElementById("dur-m")?.value||0);
+  const dS = parseFloat(document.getElementById("dur-s")?.value||0);
+  const totalMins = dH * 60 + dM + dS / 60;
   setLog(wi,di,{
     completed:true, activityType:loggedType, feeling:logState.feeling,
     notes:document.getElementById("notes")?.value||"",
-    duration:document.getElementById("duration")?.value||"",
+    duration: totalMins > 0 ? String(totalMins) : "",
     distance:isBrick?null:(document.getElementById("distance")?.value||""),
     bikeDistance:isBrick?(document.getElementById("bike-dist")?.value||""):null,
     runDistance:isBrick?(document.getElementById("run-dist")?.value||""):null,
