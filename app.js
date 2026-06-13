@@ -1533,6 +1533,7 @@ function _buildBuckets() {
 function renderChart() {
   const container = document.getElementById("chart-content");
   if (!container) return;
+  console.log("renderChart called, chartRange=", chartRange, "chartMetric=", chartMetric);
 
   const { buckets } = _buildBuckets();
   // Labels sorted chronologically — no slicing needed, _buildBuckets already filters by date range
