@@ -362,7 +362,7 @@
           <div class="notif-row-label">Reminder time</div>
           <div class="notif-row-sub">What time to send the notification</div>
         </div>
-        <input type="time" class="notif-time-input" id="notif-time" value="07:00" onchange="saveNotifTime()">
+        <input type="time" class="notif-time-input" id="notif-time" value="07:00" data-action="saveNotifTime">
       </div>
       <div class="notif-row">
         <div>
@@ -443,15 +443,15 @@
       </div>
       <div class="fuel-slider-group">
         <div class="fuel-slider-label"><span>Duration</span><span class="fuel-slider-val" id="f-dur-out">1h 30m</span></div>
-        <input type="range" class="fuel-range" id="f-duration" min="20" max="420" step="5" value="90" oninput="fuelCalc()">
+        <input type="range" class="fuel-range" id="f-duration" min="20" max="420" step="5" value="90" data-action="fuelCalc">
       </div>
       <div class="fuel-slider-group">
         <div class="fuel-slider-label"><span id="f-wt-label">Body weight</span><span class="fuel-slider-val" id="f-wt-out">88 kg</span></div>
-        <input type="range" class="fuel-range" id="f-weight" min="40" max="130" step="1" value="88" oninput="fuelCalc()">
+        <input type="range" class="fuel-range" id="f-weight" min="40" max="130" step="1" value="88" data-action="fuelCalc">
       </div>
       <div class="fuel-slider-group">
         <div class="fuel-slider-label"><span>Heat / sweat rate</span><span class="fuel-slider-val" id="f-heat-out">Moderate</span></div>
-        <input type="range" class="fuel-range" id="f-heat" min="1" max="3" step="1" value="2" oninput="fuelCalc()">
+        <input type="range" class="fuel-range" id="f-heat" min="1" max="3" step="1" value="2" data-action="fuelCalc">
       </div>
     </div>
 
@@ -1619,6 +1619,24 @@ function attachDelegatedHandlers() {
     else if (action === 'fuelUnit')       { fuelSetUnit(val); }
     else if (action === 'fuelIntensity')  { fuelSetIntensity(el); }
     else if (action === 'fuelCond')       { fuelSetCond(el); }
+    else if (action === 'fuelCalc')       { fuelCalc(); }
+    else if (action === 'saveNotifTime')  { saveNotifTime(); }
+  });
+
+  // Range sliders need 'input' event not 'click'
+  document.addEventListener('input', e => {
+    const el = e.target.closest('[data-action]');
+    if (!el) return;
+    const action = el.dataset.action;
+    if (action === 'fuelCalc') fuelCalc();
+    else if (action === 'saveNotifTime') saveNotifTime();
+  });
+
+  // Date/time inputs need 'change' event
+  document.addEventListener('change', e => {
+    const el = e.target.closest('[data-action]');
+    if (!el) return;
+    if (el.dataset.action === 'saveNotifTime') saveNotifTime();
   });
 }
 
