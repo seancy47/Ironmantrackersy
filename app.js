@@ -978,7 +978,7 @@ function renderHistory() {
         <div class="stat-sub">Run ${runKm.toFixed(0)} · Bike ${bikeKm.toFixed(0)}</div>
       </div>
       <div class="stat-card">
-        <div class="stat-value">${hrs}<span style="font-size:16px;font-weight:600;color:var(--dim)">h</span> ${mins2}<span style="font-size:16px;font-weight:600;color:var(--dim)">m</span></div>
+        <div class="stat-value">${totalMins > 0 ? `${hrs}<span style="font-size:16px;font-weight:600;color:var(--dim)">h</span> ${mins2}<span style="font-size:16px;font-weight:600;color:var(--dim)">m</span>` : `—`}</div>
         <div class="stat-label">Total Time</div>
         <div class="stat-sub">all sessions</div>
       </div>
@@ -1033,7 +1033,7 @@ function renderHistory() {
       const h = Math.floor(durMins/60), mm = Math.round(durMins%60);
       const durStr = durMins > 0 ? (h > 0 ? `${h}h ${mm}m` : `${Math.round(durMins)}m`) : "—";
       const distStr = distKm > 0.05 ? `${distKm.toFixed(1)} km` : "—";
-      const feeling = a.feeling !== undefined ? FEELINGS[a.feeling] : "";
+      const feeling = a.log?.feeling !== undefined ? FEELINGS[a.log.feeling] : "";
       const metaParts = [fmtDate(date)];
       if (isBrick && log) metaParts.push(`Bike ${parseFloat(log.bikeDistance||0).toFixed(1)}km · Run ${parseFloat(log.runDistance||0).toFixed(1)}km`);
       metaParts.push(`Week ${a.wi+1}`);
@@ -1041,7 +1041,7 @@ function renderHistory() {
       html += `<div class="hist-entry" onclick="openLog(${a.wi},${a.di},${a.cn})">
         <div class="hist-icon" style="background:${cfg.color}22;border-radius:10px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">${cfg.icon}</div>
         <div class="hist-main">
-          <div class="hist-label">${a.label}</div>
+          <div class="hist-label">${a.day.label}</div>
           <div class="hist-meta">${metaParts.join(" · ")}</div>
           ${feeling ? `<div style="font-size:11px;margin-top:2px">${feeling}</div>` : ""}
           ${a.notes ? `<div style="font-size:11px;color:var(--faint);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${a.notes}</div>` : ""}
@@ -1130,4 +1130,416 @@ if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', appInit);
 } else {
   appInit();
+}
+
+// ─────────────────────────────────────────────
+// FUEL CALCULATOR
+// ─────────────────────────────────────────────
+let fuelState = { unit: "metric", intensity: "moderate", cond: "cool" };
+
+function fuelSetUnit(val) {
+  fuelState.unit = val;
+  document.getElementById("f-kg-btn").classList.toggle("active", val === "metric");
+  document.getElementById("f-lb-btn").classList.toggle("active", val === "imperial");
+  const wtSlider = document.getElementById("f-weight");
+  if (val === "imperial") {
+    wtSlider.min = 88; wtSlider.max = 287; wtSlider.step = 1;
+    wtSlider.value = Math.round(parseFloat(wtSlider.value) * 2.205);
+  } else {
+    wtSlider.min = 40; wtSlider.max = 130; wtSlider.step = 1;
+    wtSlider.value = Math.round(parseFloat(wtSlider.value) / 2.205);
+  }
+  fuelCalc();
+}
+
+function fuelSetIntensity(el) {
+  fuelState.intensity = el.dataset.val;
+  document.querySelectorAll("#f-intensity-group .fuel-btn").forEach(b => b.classList.remove("active"));
+  el.classList.add("active");
+  fuelCalc();
+}
+
+function fuelSetCond(el) {
+  fuelState.cond = el.dataset.val;
+  document.querySelectorAll("#f-cond-group .fuel-btn").forEach(b => b.classList.remove("active"));
+  el.classList.add("active");
+  fuelCalc();
+}
+
+function fuelCalc() {
+  const durEl = document.getElementById("f-duration");
+  const wtEl  = document.getElementById("f-weight");
+  const heatEl = document.getElementById("f-heat");
+  if (!durEl || !wtEl || !heatEl) return;
+
+  const durMins = parseFloat(durEl.value) || 90;
+  const wtRaw   = parseFloat(wtEl.value)  || 88;
+  const heatLvl = parseInt(heatEl.value)  || 2; // 1=low, 2=mod, 3=high
+  const wtKg    = fuelState.unit === "imperial" ? wtRaw / 2.205 : wtRaw;
+  const durHrs  = durMins / 60;
+
+  // Update display labels
+  const durH = Math.floor(durMins / 60), durM = durMins % 60;
+  document.getElementById("f-dur-out").textContent  = durH > 0 ? `${durH}h ${durM}m` : `${durM}m`;
+  document.getElementById("f-wt-out").textContent   = fuelState.unit === "imperial" ? `${Math.round(wtRaw)} lb` : `${Math.round(wtRaw)} kg`;
+  document.getElementById("f-wt-label").textContent = "Body weight";
+  document.getElementById("f-heat-out").textContent = ["","Low","Moderate","High"][heatLvl];
+
+  // Skip carb targets for sessions under 45 min
+  if (durMins < 45) {
+    document.getElementById("f-carb-results").innerHTML = `<div class="fuel-no-fuel">Sessions under 45 min don't require carbohydrate supplementation — water only.</div>`;
+    document.getElementById("f-elec-results").innerHTML = `<div class="fuel-no-fuel">Focus on hydration — water is sufficient for short sessions.</div>`;
+    document.getElementById("f-mix-results").innerHTML = "";
+    return;
+  }
+
+  // Carb targets g/hr based on intensity
+  const carbRateMap = { easy: 40, moderate: 60, hard: 80 };
+  const carbRate = carbRateMap[fuelState.intensity] || 60; // g/hr
+  const totalCarbs = Math.round(carbRate * durHrs);
+
+  // Fluid targets ml/hr based on heat + body weight
+  const baseFluid = fuelState.cond === "cool" ? 500 : fuelState.cond === "warm" ? 700 : 900;
+  const weightAdj = Math.round((wtKg - 70) * 5); // +5ml per kg over 70kg
+  const fluidPerHr = baseFluid + weightAdj;
+  const totalFluid = Math.round(fluidPerHr * durHrs);
+
+  // Sodium mg/hr
+  const sodiumRateMap = { cool: 500, warm: 700, hot: 1000 };
+  const sodiumRate = sodiumRateMap[fuelState.cond] || 700;
+  const totalSodium = Math.round(sodiumRate * durHrs);
+
+  // Gel/bar intervals
+  const gelCarbs = 22; // avg gel
+  const barCarbs = 40; // avg bar
+  const gemsPerHr = Math.round(carbRate / gelCarbs);
+  const intervalMins = Math.round(60 / gemsPerHr);
+
+  document.getElementById("f-carb-results").innerHTML = `
+    <div class="fuel-results-grid">
+      <div class="fuel-stat"><div class="fuel-stat-label">Total carbs</div><div class="fuel-stat-num">${totalCarbs}</div><div class="fuel-stat-unit">grams</div></div>
+      <div class="fuel-stat"><div class="fuel-stat-label">Per hour</div><div class="fuel-stat-num">${carbRate}</div><div class="fuel-stat-unit">g/hr</div></div>
+      <div class="fuel-stat"><div class="fuel-stat-label">Gel interval</div><div class="fuel-stat-num">${intervalMins}</div><div class="fuel-stat-unit">mins</div></div>
+    </div>
+    <table class="fuel-table">
+      <tr><td>Gels (~22g each)</td><td>1 every ${intervalMins} min = ~${Math.round(durMins/intervalMins)} total</td></tr>
+      <tr><td>Bars (~40g each)</td><td>1 every ${Math.round(60/(carbRate/barCarbs))} min</td></tr>
+      <tr><td>Start fuelling</td><td>${durMins > 60 ? "at 20 min — don't wait until hungry" : "at 30 min for sessions 45–60 min"}</td></tr>
+    </table>
+    <div class="fuel-tip">For your North Vancouver loop rides: fuel <strong>before</strong> the climb (km 0–10), not during it. Eating on steep gradients is uncomfortable and inefficient.</div>`;
+
+  document.getElementById("f-elec-results").innerHTML = `
+    <div class="fuel-results-grid">
+      <div class="fuel-stat"><div class="fuel-stat-label">Total fluid</div><div class="fuel-stat-num">${totalFluid > 999 ? (totalFluid/1000).toFixed(1)+"L" : totalFluid}</div><div class="fuel-stat-unit">${totalFluid > 999 ? "" : "ml"}</div></div>
+      <div class="fuel-stat"><div class="fuel-stat-label">Per hour</div><div class="fuel-stat-num">${fluidPerHr}</div><div class="fuel-stat-unit">ml/hr</div></div>
+      <div class="fuel-stat"><div class="fuel-stat-label">Sodium</div><div class="fuel-stat-num">${totalSodium}</div><div class="fuel-stat-unit">mg total</div></div>
+    </div>
+    <table class="fuel-elec-table">
+      <thead><tr><td>Electrolyte</td><td>Per hour</td><td>Total</td></tr></thead>
+      <tbody>
+        <tr><td><span class="fuel-elec-name">Sodium</span><span class="fuel-elec-source">Salt tabs, sports drink, electrolyte mix</span></td><td>${sodiumRate}mg</td><td>${totalSodium}mg</td></tr>
+        <tr><td><span class="fuel-elec-name">Potassium</span><span class="fuel-elec-source">Banana, electrolyte tabs</span></td><td>150mg</td><td>${Math.round(150*durHrs)}mg</td></tr>
+        <tr><td><span class="fuel-elec-name">Magnesium</span><span class="fuel-elec-source">Electrolyte mix, nuts</span></td><td>40mg</td><td>${Math.round(40*durHrs)}mg</td></tr>
+      </tbody>
+    </table>
+    ${fuelState.cond === "hot" ? '<div class="fuel-warn">⚠️ Hot conditions: increase fluid by 20% and check urine colour — pale yellow is your target.</div>' : ""}`;
+
+  const bottlesNeeded = Math.ceil(totalFluid / 750);
+  document.getElementById("f-mix-results").innerHTML = `
+    <table class="fuel-table">
+      <tr><td>750ml bottles needed</td><td>${bottlesNeeded}</td></tr>
+      <tr><td>Mix per bottle</td><td>1 scoop electrolyte powder + water</td></tr>
+      <tr><td>Sip every</td><td>10–15 min — set a watch alarm</td></tr>
+      <tr><td>At bottle refill</td><td>Take a gel or bite of bar with each bottle swap</td></tr>
+    </table>
+    <div class="fuel-tip">Practice this exact strategy on every long session — your gut needs training too. Never try new products on race day.</div>`;
+}
+
+
+// ─────────────────────────────────────────────
+// CHART
+// ─────────────────────────────────────────────
+let chartMetric = "distance", chartRange = "week";
+let chartInstance = null;
+
+function setChartMetric(val, el) {
+  chartMetric = val;
+  document.querySelectorAll(".chart-filter-btn[data-action='chartMetric']").forEach(b => b.classList.remove("active"));
+  el.classList.add("active");
+  renderChart();
+}
+
+function setChartRange(val, el) {
+  chartRange = val;
+  document.querySelectorAll(".chart-filter-btn[data-action='chartRange']").forEach(b => b.classList.remove("active"));
+  el.classList.add("active");
+  document.getElementById("chart-range-label").textContent = { week:"Weekly", month:"Monthly", "6m":"6-Month", "1y":"Yearly" }[val] || "Weekly";
+  renderChart();
+}
+
+function renderChart() {
+  const canvas = document.getElementById("progress-chart");
+  if (!canvas) return;
+  const ctx = canvas.getContext("2d");
+
+  const logs = getLogs();
+  const cycleStartStr = localStorage.getItem("dt_cycle");
+  if (!cycleStartStr) { ctx.clearRect(0,0,canvas.width,canvas.height); return; }
+  const cycleStart = new Date(cycleStartStr);
+
+  // Build per-day data from logs
+  const dayData = {};
+  Object.entries(logs).forEach(([key, log]) => {
+    if (!log?.completed) return;
+    const m = key.match(/^C(\d+)-(\d+)-(\d+)$/);
+    if (!m) return;
+    const [, cn, wi, di] = m.map(Number);
+    const week = PLAN.weeks[wi]; if (!week) return;
+    const day = week.days[di]; if (!day || day.type === "rest") return;
+    const totalDays = cn * (PLAN.weeks.length * 7) + wi * 7 + di;
+    const d = new Date(cycleStart); d.setDate(d.getDate() + totalDays);
+    const dateStr = d.toISOString().slice(0,10);
+    const actType = log.activityType || day.type;
+    const isBrick = actType === "brick";
+    const dist = isBrick ? (parseFloat(log.bikeDistance||0)+parseFloat(log.runDistance||0)) : parseFloat(log.distance||0);
+    const dur = parseFloat(log.duration||0);
+    if (!dayData[dateStr]) dayData[dateStr] = { run:0, bike:0, swim:0, brick:0, durRun:0, durBike:0, durSwim:0, durBrick:0, sessions:0 };
+    dayData[dateStr][actType] = (dayData[dateStr][actType]||0) + dist;
+    dayData[dateStr]["dur"+actType[0].toUpperCase()+actType.slice(1)] = (dayData[dateStr]["dur"+actType[0].toUpperCase()+actType.slice(1)]||0) + dur;
+    dayData[dateStr].sessions++;
+  });
+
+  // Bucket into weeks or months
+  const buckets = {};
+  Object.entries(dayData).forEach(([dateStr, d]) => {
+    const date = new Date(dateStr+"T12:00:00");
+    let key;
+    if (chartRange === "week") {
+      const diffDays = Math.floor((date - cycleStart) / 86400000);
+      const wk = Math.floor(diffDays / 7);
+      key = `W${wk+1}`;
+    } else {
+      key = dateStr.slice(0,7);
+    }
+    if (!buckets[key]) buckets[key] = { run:0, bike:0, swim:0, brick:0, durRun:0, durBike:0, durSwim:0, durBrick:0, sessions:0 };
+    ["run","bike","swim","brick","sessions"].forEach(k => buckets[key][k] = (buckets[key][k]||0) + (d[k]||0));
+    ["durRun","durBike","durSwim","durBrick"].forEach(k => buckets[key][k] = (buckets[key][k]||0) + (d[k]||0));
+  });
+
+  const maxBuckets = { week:12, month:6, "6m":6, "1y":12 }[chartRange] || 8;
+  const labels = Object.keys(buckets).sort().slice(-maxBuckets);
+
+  if (!labels.length) {
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    canvas.parentElement.innerHTML = `<div class="chart-empty">Log some workouts to see your progress chart.</div>`;
+    return;
+  }
+
+  const types = ["run","bike","swim","brick"];
+  const colors = { run:"#a78bfa", bike:"#c4b5fd", swim:"#818cf8", brick:"#e879f9" };
+
+  const datasets = types.map(t => ({
+    label: t.charAt(0).toUpperCase()+t.slice(1),
+    backgroundColor: colors[t]+"cc",
+    borderColor: colors[t],
+    borderWidth: 1,
+    borderRadius: 3,
+    data: labels.map(l => {
+      const b = buckets[l];
+      if (!b) return 0;
+      if (chartMetric === "distance") return parseFloat((b[t]||0).toFixed(1));
+      if (chartMetric === "duration") return parseFloat(((b["dur"+t.charAt(0).toUpperCase()+t.slice(1)]||0)/60).toFixed(1));
+      if (chartMetric === "sessions") return b.sessions || 0;
+      return 0;
+    })
+  })).filter(ds => ds.data.some(v => v > 0));
+
+  // Destroy old chart
+  if (chartInstance) { try { chartInstance.destroy(); } catch(e) {} chartInstance = null; }
+
+  // Rebuild canvas (fixes sizing after destroy)
+  const wrap = canvas.parentElement;
+  wrap.innerHTML = `<canvas id="progress-chart"></canvas>`;
+  const newCanvas = document.getElementById("progress-chart");
+  const newCtx = newCanvas.getContext("2d");
+
+  if (typeof Chart === "undefined") {
+    // Load Chart.js dynamically if not present
+    const s = document.createElement("script");
+    s.src = "https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js";
+    s.onload = () => _drawChart(newCanvas, newCtx, labels, datasets);
+    document.head.appendChild(s);
+  } else {
+    _drawChart(newCanvas, newCtx, labels, datasets);
+  }
+}
+
+function _drawChart(canvas, ctx, labels, datasets) {
+  chartInstance = new Chart(ctx, {
+    type: "bar",
+    data: { labels, datasets },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { stacked: true, ticks: { color:"#6d5b9e", font:{ size:10 } }, grid: { color:"#2a1a5222" } },
+        y: { stacked: true, ticks: { color:"#6d5b9e", font:{ size:10 } }, grid: { color:"#2a1a5244" } }
+      }
+    }
+  });
+}
+
+
+// ─────────────────────────────────────────────
+// SETTINGS / NOTIFICATIONS
+// ─────────────────────────────────────────────
+function initSettingsScreen() {
+  const pin = getUserPin();
+  const startStr = localStorage.getItem("dt_cycle");
+  const startDisp = document.getElementById("plan-start-display");
+  if (startDisp) {
+    if (startStr) {
+      const d = new Date(startStr);
+      startDisp.textContent = d.toLocaleDateString("en-GB", { weekday:"short", day:"numeric", month:"long", year:"numeric" });
+    } else {
+      startDisp.textContent = "Not set — defaults to current week";
+    }
+  }
+
+  // Notification toggle state
+  const notifOn = localStorage.getItem("notif_enabled") === "true";
+  const skipRest = localStorage.getItem("notif_skip_rest") !== "false"; // default true
+  const notifToggle = document.getElementById("notif-toggle");
+  const skipToggle  = document.getElementById("notif-skip-rest");
+  if (notifToggle) notifToggle.classList.toggle("on", notifOn);
+  if (skipToggle)  skipToggle.classList.toggle("on", skipRest);
+
+  const timeEl = document.getElementById("notif-time");
+  if (timeEl) timeEl.value = localStorage.getItem("notif_time") || "07:00";
+
+  updateNotifStatus();
+}
+
+function updateNotifStatus() {
+  const el = document.getElementById("notif-status");
+  if (!el) return;
+  if (!("Notification" in window)) {
+    el.textContent = "Notifications not supported in this browser.";
+    return;
+  }
+  const perm = Notification.permission;
+  const enabled = localStorage.getItem("notif_enabled") === "true";
+  if (perm === "denied") el.textContent = "Notifications blocked — enable in browser settings.";
+  else if (!enabled) el.textContent = "Notifications off.";
+  else if (perm === "granted") el.textContent = "✓ Notifications enabled.";
+  else el.textContent = "Permission not yet granted — toggle on to request.";
+}
+
+function toggleNotifications() {
+  const current = localStorage.getItem("notif_enabled") === "true";
+  const newVal = !current;
+  if (newVal && "Notification" in window && Notification.permission === "default") {
+    Notification.requestPermission().then(perm => {
+      if (perm === "granted") {
+        localStorage.setItem("notif_enabled", "true");
+        document.getElementById("notif-toggle").classList.add("on");
+      } else {
+        localStorage.setItem("notif_enabled", "false");
+        document.getElementById("notif-toggle").classList.remove("on");
+      }
+      updateNotifStatus();
+    });
+    return;
+  }
+  localStorage.setItem("notif_enabled", String(newVal));
+  document.getElementById("notif-toggle").classList.toggle("on", newVal);
+  updateNotifStatus();
+}
+
+function toggleSkipRest() {
+  const current = localStorage.getItem("notif_skip_rest") !== "false";
+  const newVal = !current;
+  localStorage.setItem("notif_skip_rest", String(newVal));
+  document.getElementById("notif-skip-rest").classList.toggle("on", newVal);
+}
+
+function saveNotifTime() {
+  const el = document.getElementById("notif-time");
+  if (el) localStorage.setItem("notif_time", el.value);
+}
+
+function sendTestNotif() {
+  if (!("Notification" in window)) { alert("Notifications not supported in this browser."); return; }
+  if (Notification.permission !== "granted") {
+    Notification.requestPermission().then(p => { if (p === "granted") _fireTestNotif(); else alert("Please allow notifications first."); });
+    return;
+  }
+  _fireTestNotif();
+}
+
+function _fireTestNotif() {
+  const wi = getCurrentWeek();
+  const today = new Date();
+  const todayName = DAYS[today.getDay()];
+  const week = PLAN.weeks[wi];
+  const session = week?.days.find(d => d.day === todayName);
+  const title = "Ironman Tracker";
+  const body = session && session.type !== "rest"
+    ? `Today: ${session.label} — let's go! 💪`
+    : "Rest day — recover well 💤";
+  new Notification(title, { body, icon: "/icon-192.png" });
+}
+
+function showChangePlanStart() {
+  const picker = document.getElementById("plan-start-picker");
+  if (!picker) return;
+  picker.style.display = picker.style.display === "none" ? "block" : "none";
+  const input = document.getElementById("plan-start-input");
+  if (input) {
+    const s = localStorage.getItem("dt_cycle");
+    if (s) input.value = new Date(s).toISOString().slice(0,10);
+  }
+}
+
+function savePlanStart() {
+  const input = document.getElementById("plan-start-input");
+  if (!input?.value) return;
+  // Force Monday
+  const d = new Date(input.value + "T12:00:00");
+  const day = d.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  d.setDate(d.getDate() + diff);
+  d.setHours(0,0,0,0);
+  localStorage.setItem("dt_cycle", d.toISOString());
+  document.getElementById("plan-start-picker").style.display = "none";
+  initSettingsScreen();
+  renderToday();
+  renderPlan(getCurrentWeek());
+}
+
+function exportLogs() {
+  const logs = getLogs();
+  const output = Object.entries(logs).map(([key, log]) => {
+    const m = key.match(/^C(\d+)-(\d+)-(\d+)$/);
+    if (!m) return null;
+    const [, cn, wi, di] = m.map(Number);
+    const week = PLAN.weeks[wi]; if (!week) return null;
+    const day = week.days[di]; if (!day) return null;
+    const cycleStartStr = localStorage.getItem("dt_cycle");
+    let date = "";
+    if (cycleStartStr) {
+      const cs = new Date(cycleStartStr);
+      const totalDays = cn * (PLAN.weeks.length * 7) + wi * 7 + di;
+      const d2 = new Date(cs); d2.setDate(cs.getDate() + totalDays);
+      date = d2.toISOString().slice(0,10);
+    }
+    return { date, week: wi+1, day: day.day, session: day.label, ...log };
+  }).filter(Boolean);
+
+  const blob = new Blob([JSON.stringify(output, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = "ironman-logs.json"; a.click();
+  URL.revokeObjectURL(url);
 }
