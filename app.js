@@ -1479,8 +1479,8 @@ function renderChart() {
       </div>
     </div>
     ${sportTiles ? `<div style="display:flex;gap:6px;margin-bottom:14px">${sportTiles}</div>` : ""}
-    <div style="position:relative;height:180px;width:100%">
-      <canvas id="progress-chart"></canvas>
+    <div style="position:relative;height:180px;width:100%;overflow:hidden">
+      <canvas id="progress-chart" style="display:block;max-height:180px"></canvas>
     </div>`;
 
   const newCanvas = document.getElementById("progress-chart");
@@ -1498,6 +1498,7 @@ function renderChart() {
 }
 
 function _drawChart(canvas, ctx, labels, datasets, metricLabel) {
+  canvas.style.height = "180px";
   chartInstance = new Chart(ctx, {
     type: "bar",
     data: { labels, datasets },
