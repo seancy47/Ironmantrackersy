@@ -452,6 +452,7 @@ function removeLogEntry(wi, di) {
 
 // Supabase operations
 async function supaUpsert(cn, wi, di, data) {
+  const pin = getUserPin();
   try {
     await fetch(`${SUPA_URL}/rest/v1/logs`, {
       method: "POST",
@@ -466,9 +467,9 @@ async function supaUpsert(cn, wi, di, data) {
         distance: parseFloat(data.distance) || null,
         bike_distance: parseFloat(data.bikeDistance) || null,
         run_distance: parseFloat(data.runDistance) || null,
-        duration: parseFloat(data.duration) || null,
-        avg_hr: parseInt(data.avg_hr) || null,
-        max_hr: parseInt(data.max_hr) || null,
+        duration: parseFloat(data.duration) > 0 ? parseFloat(data.duration) : null,
+        avg_hr: parseInt(data.avg_hr) > 0 ? parseInt(data.avg_hr) : null,
+        max_hr: parseInt(data.max_hr) > 0 ? parseInt(data.max_hr) : null,
         notes: data.notes || null,
         completed_at: data.completedAt || null,
       })
@@ -477,6 +478,7 @@ async function supaUpsert(cn, wi, di, data) {
 }
 
 async function supaDelete(cn, wi, di) {
+  const pin = getUserPin();
   try {
     await fetch(`${SUPA_URL}/rest/v1/logs?key=eq.${logKey(cn,wi,di)}&user_pin=eq.${pin}`, {
       method: "DELETE", headers: SUPA_HEADERS
@@ -489,33 +491,37 @@ async function supaSync() {
   const pin = getUserPin();
   try {
     showSyncStatus("syncing");
-    const res = await fetch(`${SUPA_URL}/rest/v1/logs?user_pin=eq.${pin}&select=*`, {
-      headers: SUPA_HEADERS
-    });
-    if (!res.ok) throw new Error(res.status);
-    const rows = await res.json();
-    const merged = {};
-    rows.forEach(r => {
-      merged[r.key] = {
-        completed: r.completed,
-        activityType: r.activity_type,
-        feeling: r.feeling,
-        distance: r.distance != null ? String(r.distance) : "",
-        bikeDistance: r.bike_distance != null ? String(r.bike_distance) : "",
-        runDistance: r.run_distance != null ? String(r.run_distance) : "",
-        duration: r.duration != null ? String(r.duration) : "",
-        avg_hr: r.avg_hr || 0,
-        max_hr: r.max_hr || 0,
-        notes: r.notes || "",
-        completedAt: r.completed_at,
-        cycleNum: r.cycle_num,
-      };
-    });
-    saveLogsLocal(merged);
+    // Pull settings and logs in parallel
+    await Promise.all([pullSettings(), (async () => {
+      const res = await fetch(`${SUPA_URL}/rest/v1/logs?user_pin=eq.${pin}&select=*`, {
+        headers: SUPA_HEADERS
+      });
+      if (!res.ok) throw new Error(res.status);
+      const rows = await res.json();
+      const merged = {};
+      rows.forEach(r => {
+        merged[r.key] = {
+          completed: r.completed,
+          activityType: r.activity_type,
+          feeling: r.feeling,
+          distance: r.distance != null ? String(r.distance) : "",
+          bikeDistance: r.bike_distance != null ? String(r.bike_distance) : "",
+          runDistance: r.run_distance != null ? String(r.run_distance) : "",
+          duration: r.duration != null ? String(r.duration) : "",
+          avg_hr: r.avg_hr || 0,
+          max_hr: r.max_hr || 0,
+          notes: r.notes || "",
+          completedAt: r.completed_at,
+          cycleNum: r.cycle_num,
+        };
+      });
+      saveLogsLocal(merged);
+    })()]);
     showSyncStatus("ok");
     renderToday();
     if (document.getElementById("history-screen").classList.contains("active")) renderHistory();
     if (document.getElementById("plan-screen").classList.contains("active")) renderPlan(activePlanWeek);
+    if (document.getElementById("settings-screen").classList.contains("active")) initSettingsScreen();
   } catch(e) {
     console.warn("Supabase pull failed:", e);
     showSyncStatus("error");
@@ -1726,6 +1732,53 @@ function updateNotifStatus() {
   else el.textContent = "Permission not yet granted — toggle on to request.";
 }
 
+// ─────────────────────────────────────────────
+// SETTINGS SYNC
+// ─────────────────────────────────────────────
+async function pushSettings() {
+  const pin = getUserPin();
+  try {
+    await fetch(`${SUPA_URL}/rest/v1/settings`, {
+      method: "POST",
+      headers: { ...SUPA_HEADERS, "Prefer": "resolution=merge-duplicates" },
+      body: JSON.stringify({
+        user_pin: pin,
+        plan_start: localStorage.getItem("dt_cycle") || null,
+        notif_enabled: localStorage.getItem("notif_enabled") === "true",
+        notif_skip_rest: localStorage.getItem("notif_skip_rest") !== "false",
+        notif_time: localStorage.getItem("notif_time") || "07:00",
+        strava_imports: localStorage.getItem("strava_imports") || "[]",
+        updated_at: new Date().toISOString(),
+      })
+    });
+  } catch(e) { console.warn("Settings push failed:", e); }
+}
+
+async function pullSettings() {
+  const pin = getUserPin();
+  try {
+    const res = await fetch(`${SUPA_URL}/rest/v1/settings?user_pin=eq.${pin}&select=*`, {
+      headers: SUPA_HEADERS
+    });
+    if (!res.ok) throw new Error(res.status);
+    const rows = await res.json();
+    if (!rows.length) return; // no settings saved yet
+    const s = rows[0];
+    if (s.plan_start)    localStorage.setItem("dt_cycle", s.plan_start);
+    if (s.notif_enabled  != null) localStorage.setItem("notif_enabled",   String(s.notif_enabled));
+    if (s.notif_skip_rest != null) localStorage.setItem("notif_skip_rest", String(s.notif_skip_rest));
+    if (s.notif_time)    localStorage.setItem("notif_time", s.notif_time);
+    if (s.strava_imports && s.strava_imports !== "[]") {
+      // Only overwrite local strava imports if remote has more
+      const remote = JSON.parse(s.strava_imports || "[]");
+      const local  = getStravaImports();
+      if (remote.length >= local.length) {
+        localStorage.setItem("strava_imports", s.strava_imports);
+      }
+    }
+  } catch(e) { console.warn("Settings pull failed:", e); }
+}
+
 function toggleNotifications() {
   const current = localStorage.getItem("notif_enabled") === "true";
   const newVal = !current;
@@ -1739,12 +1792,14 @@ function toggleNotifications() {
         document.getElementById("notif-toggle").classList.remove("on");
       }
       updateNotifStatus();
+      pushSettings();
     });
     return;
   }
   localStorage.setItem("notif_enabled", String(newVal));
   document.getElementById("notif-toggle").classList.toggle("on", newVal);
   updateNotifStatus();
+  pushSettings();
 }
 
 function toggleSkipRest() {
@@ -1752,14 +1807,29 @@ function toggleSkipRest() {
   const newVal = !current;
   localStorage.setItem("notif_skip_rest", String(newVal));
   document.getElementById("notif-skip-rest").classList.toggle("on", newVal);
+  pushSettings();
 }
 
 function saveNotifTime() {
   const el = document.getElementById("notif-time");
-  if (el) localStorage.setItem("notif_time", el.value);
+  if (el) { localStorage.setItem("notif_time", el.value); pushSettings(); }
 }
 
-function sendTestNotif() {
+function savePlanStart() {
+  const input = document.getElementById("plan-start-input");
+  if (!input?.value) return;
+  const d = new Date(input.value + "T12:00:00");
+  const day = d.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  d.setDate(d.getDate() + diff);
+  d.setHours(0,0,0,0);
+  localStorage.setItem("dt_cycle", d.toISOString());
+  document.getElementById("plan-start-picker").style.display = "none";
+  pushSettings();
+  initSettingsScreen();
+  renderToday();
+  renderPlan(getCurrentWeek());
+}
   if (!("Notification" in window)) { alert("Notifications not supported in this browser."); return; }
   if (Notification.permission !== "granted") {
     Notification.requestPermission().then(p => { if (p === "granted") _fireTestNotif(); else alert("Please allow notifications first."); });
@@ -1790,22 +1860,6 @@ function showChangePlanStart() {
     const s = localStorage.getItem("dt_cycle");
     if (s) input.value = new Date(s).toISOString().slice(0,10);
   }
-}
-
-function savePlanStart() {
-  const input = document.getElementById("plan-start-input");
-  if (!input?.value) return;
-  // Force Monday
-  const d = new Date(input.value + "T12:00:00");
-  const day = d.getDay();
-  const diff = day === 0 ? -6 : 1 - day;
-  d.setDate(d.getDate() + diff);
-  d.setHours(0,0,0,0);
-  localStorage.setItem("dt_cycle", d.toISOString());
-  document.getElementById("plan-start-picker").style.display = "none";
-  initSettingsScreen();
-  renderToday();
-  renderPlan(getCurrentWeek());
 }
 
 function exportLogs() {
@@ -1844,6 +1898,7 @@ function saveStravaImports(arr) { localStorage.setItem("strava_imports", JSON.st
 function clearStravaImports() {
   if (!confirm("Remove all imported Strava activities from history?")) return;
   saveStravaImports([]);
+  pushSettings();
   renderStravaImportBar();
   renderHistory();
 }
@@ -1965,6 +2020,7 @@ function handleStravaCsv(event) {
       // Deduplicate by id — replace all existing with fresh import
       saveStravaImports(activities.sort((a,b) => b.date.localeCompare(a.date)));
       localStorage.setItem("strava_import_date", new Date().toISOString());
+      pushSettings();
       renderStravaImportBar();
       renderHistory();
 
