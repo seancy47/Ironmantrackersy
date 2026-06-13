@@ -238,37 +238,12 @@
 </head>
 <body>
 <div id="app">
-  <div class="pin-title">Ironman Tracker</div>
-  <div class="pin-subtitle" id="pin-subtitle">Enter your PIN to continue</div>
-  <div class="pin-dots">
-    <div class="pin-dot" id="pd0"></div>
-    <div class="pin-dot" id="pd1"></div>
-    <div class="pin-dot" id="pd2"></div>
-    <div class="pin-dot" id="pd3"></div>
-  </div>
-  <div class="pin-keypad" id="pin-keypad">
-    <button class="pin-key" data-pin="1">1</button>
-    <button class="pin-key" data-pin="2">2</button>
-    <button class="pin-key" data-pin="3">3</button>
-    <button class="pin-key" data-pin="4">4</button>
-    <button class="pin-key" data-pin="5">5</button>
-    <button class="pin-key" data-pin="6">6</button>
-    <button class="pin-key" data-pin="7">7</button>
-    <button class="pin-key" data-pin="8">8</button>
-    <button class="pin-key" data-pin="9">9</button>
-    <button class="pin-key empty" disabled></button>
-    <button class="pin-key" data-pin="0">0</button>
-    <button class="pin-key del" data-pin="del">⌫</button>
-  </div>
-  <div class="pin-error" id="pin-error"></div>
-  <div class="pin-setup" id="pin-setup-link" style="display:none">Reset PIN</div>
-</div>
   <div id="today-screen" class="screen active">
     <div class="page-header">
       <span id="today-date" style="font-size:12px;color:var(--faint);font-weight:600;letter-spacing:0.08em;text-transform:uppercase"></span>
       <div style="display:flex;align-items:center;gap:8px">
         <span id="sync-status" style="font-size:10px;font-weight:600;letter-spacing:0.06em"></span>
-        <button onclick="supaSync()" style="background:none;border:none;cursor:pointer;font-size:14px;color:var(--faint);padding:2px" title="Sync now">⟳</button>
+        <button data-action="supaSync" style="background:none;border:none;cursor:pointer;font-size:14px;color:var(--faint);padding:2px" title="Sync now">⟳</button>
         <span id="today-week-badge" class="week-badge"></span>
       </div>
     </div>
@@ -312,8 +287,8 @@
 
   <div id="log-screen">
     <div class="log-header">
-      <button class="back-btn" onclick="closeLog()">← Back</button>
-      <button class="delete-btn" id="delete-btn" onclick="deleteLog()" style="display:none">Remove</button>
+      <button class="back-btn" data-action="closeLog">← Back</button>
+      <button class="delete-btn" id="delete-btn" data-action="deleteLog" style="display:none">Remove</button>
     </div>
     <div class="session-card" id="log-session-card"></div>
     <div class="detail-box" id="log-detail-box"><p id="log-detail-text"></p></div>
@@ -326,11 +301,8 @@
         <div style="font-size:26px;font-weight:900;letter-spacing:-0.5px;color:var(--text)">History</div>
         <div style="font-size:12px;color:var(--faint);margin-top:4px">Your training log</div>
       </div>
-      <button onclick="document.getElementById('strava-csv-input').click()" style="background:var(--card2);border:1px solid var(--border2);border-radius:10px;padding:6px 12px;color:var(--accent-bright);font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">⬆ Import Strava</button>
-      <input type="file" id="strava-csv-input" accept=".csv" style="display:none" onchange="importStravaCSV(event)">
     </div>
     <div class="pad">
-      <div id="strava-import-status" style="margin-bottom:8px"></div>
       <div class="stat-grid" id="hist-stats"></div>
       <div class="type-bar" id="hist-type-bar"></div>
     </div>
@@ -340,17 +312,17 @@
       <div class="chart-title">
         <span id="chart-range-label">Weekly</span> volume
         <div class="chart-filter">
-          <button class="chart-filter-btn active" onclick="setChartMetric('distance',this)">km</button>
-          <button class="chart-filter-btn" onclick="setChartMetric('duration',this)">hrs</button>
-          <button class="chart-filter-btn" onclick="setChartMetric('sessions',this)">sessions</button>
+          <button class="chart-filter-btn active" data-action="chartMetric" data-val="distance">km</button>
+          <button class="chart-filter-btn" data-action="chartMetric" data-val="duration">hrs</button>
+          <button class="chart-filter-btn" data-action="chartMetric" data-val="sessions">sessions</button>
         </div>
       </div>
       <!-- Time range selector -->
       <div style="display:flex;gap:5px;margin-bottom:12px;overflow-x:auto">
-        <button class="chart-filter-btn active" id="range-week" onclick="setChartRange('week',this)">Weekly</button>
-        <button class="chart-filter-btn" id="range-month" onclick="setChartRange('month',this)">Monthly</button>
-        <button class="chart-filter-btn" id="range-6m" onclick="setChartRange('6m',this)">6 Months</button>
-        <button class="chart-filter-btn" id="range-1y" onclick="setChartRange('1y',this)">1 Year</button>
+        <button class="chart-filter-btn active" id="range-week" data-action="chartRange" data-val="week">Weekly</button>
+        <button class="chart-filter-btn" id="range-month" data-action="chartRange" data-val="month">Monthly</button>
+        <button class="chart-filter-btn" id="range-6m" data-action="chartRange" data-val="6m">6 Months</button>
+        <button class="chart-filter-btn" id="range-1y" data-action="chartRange" data-val="1y">1 Year</button>
       </div>
       <div class="chart-canvas-wrap"><canvas id="progress-chart"></canvas></div>
       <div class="chart-legend">
@@ -383,7 +355,7 @@
           <div class="notif-row-label">Daily reminder</div>
           <div class="notif-row-sub">Get notified about today's session</div>
         </div>
-        <button class="notif-toggle" id="notif-toggle" onclick="toggleNotifications()"></button>
+        <button class="notif-toggle" id="notif-toggle" data-action="toggleNotif"></button>
       </div>
       <div class="notif-row">
         <div>
@@ -397,10 +369,10 @@
           <div class="notif-row-label">Skip rest days</div>
           <div class="notif-row-sub">No notification on Wed and Sun</div>
         </div>
-        <button class="notif-toggle on" id="notif-skip-rest" onclick="toggleSkipRest()"></button>
+        <button class="notif-toggle on" id="notif-skip-rest" data-action="toggleSkipRest"></button>
       </div>
       <div class="notif-status" id="notif-status"></div>
-      <button onclick="sendTestNotif()" style="width:100%;margin-top:12px;padding:11px;background:var(--card2);color:var(--accent-bright);border:1px solid var(--border2);border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">Send test notification</button>
+      <button data-action="sendTestNotif" style="width:100%;margin-top:12px;padding:11px;background:var(--card2);color:var(--accent-bright);border:1px solid var(--border2);border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">Send test notification</button>
     </div>
 
     <!-- Plan section -->
@@ -411,28 +383,18 @@
           <div class="notif-row-label">Plan start date</div>
           <div class="notif-row-sub" id="plan-start-display">Loading...</div>
         </div>
-        <button onclick="showChangePlanStart()" style="font-size:12px;font-weight:700;color:var(--accent-bright);background:none;border:none;cursor:pointer;font-family:inherit;padding:4px 0">Change</button>
+        <button data-action="showPlanStart" style="font-size:12px;font-weight:700;color:var(--accent-bright);background:none;border:none;cursor:pointer;font-family:inherit;padding:4px 0">Change</button>
       </div>
       <div id="plan-start-picker" style="display:none;padding-top:12px">
         <input type="date" id="plan-start-input" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-size:14px;font-family:inherit;outline:none">
         <div style="display:flex;gap:8px;margin-top:8px">
-          <button onclick="savePlanStart()" style="flex:1;padding:10px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">Save</button>
-          <button onclick="document.getElementById('plan-start-picker').style.display='none'" style="flex:1;padding:10px;background:var(--card2);color:var(--muted);border:1px solid var(--border);border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">Cancel</button>
+          <button data-action="savePlanStart" style="flex:1;padding:10px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">Save</button>
+          <button data-action="hidePlanStart" style="flex:1;padding:10px;background:var(--card2);color:var(--muted);border:1px solid var(--border);border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">Cancel</button>
         </div>
       </div>
     </div>
 
-    <!-- Security section -->
-    <div class="notif-section">
-      <div class="notif-section-title">Security</div>
-      <div class="notif-row">
-        <div>
-          <div class="notif-row-label">PIN lock</div>
-          <div class="notif-row-sub">4-digit PIN protects your data</div>
-        </div>
-        <button onclick="pinReset()" style="font-size:12px;font-weight:700;color:var(--accent-bright);background:none;border:none;cursor:pointer;font-family:inherit;padding:4px 0">Reset PIN</button>
-      </div>
-    </div>
+    <!-- Security section removed until PIN is re-implemented -->
 
     <!-- Data section -->
     <div class="notif-section">
@@ -442,14 +404,14 @@
           <div class="notif-row-label">Sync now</div>
           <div class="notif-row-sub">Pull latest data from cloud</div>
         </div>
-        <button onclick="supaSync()" style="font-size:12px;font-weight:700;color:var(--accent-bright);background:none;border:none;cursor:pointer;font-family:inherit;padding:4px 0">Sync ⟳</button>
+        <button data-action="supaSync" style="font-size:12px;font-weight:700;color:var(--accent-bright);background:none;border:none;cursor:pointer;font-family:inherit;padding:4px 0">Sync ⟳</button>
       </div>
       <div class="notif-row">
         <div>
           <div class="notif-row-label">Export logs</div>
           <div class="notif-row-sub">Download your workout data as JSON</div>
         </div>
-        <button onclick="exportLogs()" style="font-size:12px;font-weight:700;color:var(--accent-bright);background:none;border:none;cursor:pointer;font-family:inherit;padding:4px 0">Export</button>
+        <button data-action="exportLogs" style="font-size:12px;font-weight:700;color:var(--accent-bright);background:none;border:none;cursor:pointer;font-family:inherit;padding:4px 0">Export</button>
       </div>
     </div>
 
@@ -475,8 +437,8 @@
       <div class="fuel-section-title">
         Your session
         <span class="fuel-unit-row">
-          <button class="fuel-unit-btn active" id="f-kg-btn" onclick="fuelSetUnit('metric')">kg</button>
-          <button class="fuel-unit-btn" id="f-lb-btn" onclick="fuelSetUnit('imperial')">lb</button>
+          <button class="fuel-unit-btn active" id="f-kg-btn" data-action="fuelUnit" data-val="metric">kg</button>
+          <button class="fuel-unit-btn" id="f-lb-btn" data-action="fuelUnit" data-val="imperial">lb</button>
         </span>
       </div>
       <div class="fuel-slider-group">
@@ -498,15 +460,15 @@
       <div class="fuel-section-title">Conditions</div>
       <div class="fuel-toggle-label">Effort level</div>
       <div class="fuel-toggle-row" id="f-intensity-group">
-        <button class="fuel-btn" data-val="easy" onclick="fuelSetIntensity(this)">Easy / Z1–Z2</button>
-        <button class="fuel-btn active" data-val="moderate" onclick="fuelSetIntensity(this)">Moderate / Z3</button>
-        <button class="fuel-btn" data-val="hard" onclick="fuelSetIntensity(this)">Hard / Z4–Z5</button>
+        <button class="fuel-btn" data-val="easy" data-action="fuelIntensity">Easy / Z1–Z2</button>
+        <button class="fuel-btn active" data-val="moderate" data-action="fuelIntensity">Moderate / Z3</button>
+        <button class="fuel-btn" data-val="hard" data-action="fuelIntensity">Hard / Z4–Z5</button>
       </div>
       <div class="fuel-toggle-label" style="margin-top:14px">Conditions</div>
       <div class="fuel-toggle-row" id="f-cond-group">
-        <button class="fuel-btn active" data-val="cool" onclick="fuelSetCond(this)">&lt;15°C Cool</button>
-        <button class="fuel-btn" data-val="warm" onclick="fuelSetCond(this)">15–25°C Warm</button>
-        <button class="fuel-btn" data-val="hot" onclick="fuelSetCond(this)">&gt;25°C Hot</button>
+        <button class="fuel-btn active" data-val="cool" data-action="fuelCond">&lt;15°C Cool</button>
+        <button class="fuel-btn" data-val="warm" data-action="fuelCond">15–25°C Warm</button>
+        <button class="fuel-btn" data-val="hot" data-action="fuelCond">&gt;25°C Hot</button>
       </div>
     </div>
 
@@ -532,19 +494,19 @@
   </div>
 
   <div id="tabbar">
-    <button class="tab active" onclick="showTab('today',this)">
+    <button class="tab active" data-tab="today">
       <span class="tab-icon">🏠</span><span class="tab-label">Today</span>
     </button>
-    <button class="tab" onclick="showTab('plan',this)">
+    <button class="tab" data-tab="plan">
       <span class="tab-icon">📋</span><span class="tab-label">Plan</span>
     </button>
-    <button class="tab" onclick="showTab('history',this)">
+    <button class="tab" data-tab="history">
       <span class="tab-icon">📈</span><span class="tab-label">History</span>
     </button>
-    <button class="tab" onclick="showTab('fuel',this)">
+    <button class="tab" data-tab="fuel">
       <span class="tab-icon">⚡</span><span class="tab-label">Fuel</span>
     </button>
-    <button class="tab" onclick="showTab('settings',this)">
+    <button class="tab" data-tab="settings">
       <span class="tab-icon">⚙️</span><span class="tab-label">Settings</span>
     </button>
   </div>
@@ -1507,7 +1469,7 @@ function renderHistory() {
     totalKm += a.distKm;
     totalMins += a.durMins;
     if (a.actType === "run") runKm += a.distKm;
-    if (a.actType === "bike" || a.actType === "brick") bikeKm += a.source==='strava' ? a.distKm : parseFloat(a.log?.bikeDistance||a.distKm||0);
+    if (a.actType === "bike" || a.actType === "brick") bikeKm += parseFloat(a.log?.bikeDistance||a.distKm||0);
     if (a.actType === "swim") swimKm += a.distKm;
     typeCounts[a.actType] = (typeCounts[a.actType]||0) + 1;
   });
@@ -1580,25 +1542,20 @@ function renderHistory() {
       </div>`;
 
     acts.forEach(a => {
-      const { cfg, distKm, durMins, date, actType, source } = a;
+      const { cfg, distKm, durMins, date, actType, log } = a;
       const isBrick = actType === "brick";
       const h = Math.floor(durMins/60), mm = Math.round(durMins%60);
       const durStr = durMins > 0 ? (h > 0 ? `${h}h ${mm}m` : `${Math.round(durMins)}m`) : "—";
       const distStr = distKm > 0.05 ? `${distKm.toFixed(1)} km` : "—";
       const feeling = a.feeling !== undefined ? FEELINGS[a.feeling] : "";
-      const isStrava = source === 'strava';
       const metaParts = [fmtDate(date)];
-      if (isBrick && a.log) metaParts.push(`Bike ${parseFloat(a.log.bikeDistance||0).toFixed(1)}km · Run ${parseFloat(a.log.runDistance||0).toFixed(1)}km`);
-      if (isStrava && a.elev > 0) metaParts.push(`↑${Math.round(a.elev)}m`);
-      if (!isStrava) metaParts.push(`Week ${a.wi+1}`);
+      if (isBrick && log) metaParts.push(`Bike ${parseFloat(log.bikeDistance||0).toFixed(1)}km · Run ${parseFloat(log.runDistance||0).toFixed(1)}km`);
+      metaParts.push(`Week ${a.wi+1}`);
 
-      const clickHandler = isStrava ? "" : `onclick="openLog(${a.wi},${a.di},${a.cn})"`;
-      const sourceTag = isStrava ? `<span style="font-size:9px;color:#fc4c02;font-weight:700;letter-spacing:0.05em">STRAVA</span>` : "";
-
-      html += `<div class="hist-entry" ${clickHandler} style="${isStrava ? "" : "cursor:pointer"}">
+      html += `<div class="hist-entry" onclick="openLog(${a.wi},${a.di},${a.cn})">
         <div class="hist-icon" style="background:${cfg.color}22;border-radius:10px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">${cfg.icon}</div>
         <div class="hist-main">
-          <div class="hist-label" style="display:flex;align-items:center;gap:6px">${a.label} ${sourceTag}</div>
+          <div class="hist-label">${a.label}</div>
           <div class="hist-meta">${metaParts.join(" · ")}</div>
           ${feeling ? `<div style="font-size:11px;margin-top:2px">${feeling}</div>` : ""}
           ${a.notes ? `<div style="font-size:11px;color:var(--faint);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${a.notes}</div>` : ""}
@@ -1620,9 +1577,56 @@ function renderHistory() {
 
 
 // --- Init ---
-setTimeout(supaSync, 300);
-renderToday();
-renderPlan(0);
+function appInit() {
+  // Attach tab bar via event delegation — no inline onclick needed
+  const tabbar = document.getElementById('tabbar');
+  if (tabbar) {
+    tabbar.addEventListener('click', e => {
+      const btn = e.target.closest('[data-tab]');
+      if (!btn) return;
+      showTab(btn.dataset.tab, btn);
+    });
+  }
+
+  // Attach all other delegated handlers
+  attachDelegatedHandlers();
+
+  setTimeout(supaSync, 300);
+  renderToday();
+  renderPlan(0);
+}
+
+function attachDelegatedHandlers() {
+  // Single document-level handler for all static data-action elements
+  document.addEventListener('click', e => {
+    const el = e.target.closest('[data-action]');
+    if (!el) return;
+    const action = el.dataset.action;
+    const val = el.dataset.val;
+
+    if (action === 'supaSync')       { supaSync(); }
+    else if (action === 'closeLog')  { closeLog(); }
+    else if (action === 'deleteLog') { deleteLog(); }
+    else if (action === 'chartMetric')  { setChartMetric(val, el); }
+    else if (action === 'chartRange')   { setChartRange(val, el); }
+    else if (action === 'toggleNotif')  { toggleNotifications(); }
+    else if (action === 'toggleSkipRest') { toggleSkipRest(); }
+    else if (action === 'sendTestNotif')  { sendTestNotif(); }
+    else if (action === 'showPlanStart')  { showChangePlanStart(); }
+    else if (action === 'savePlanStart')  { savePlanStart(); }
+    else if (action === 'hidePlanStart')  { document.getElementById('plan-start-picker').style.display='none'; }
+    else if (action === 'exportLogs')     { exportLogs(); }
+    else if (action === 'fuelUnit')       { fuelSetUnit(val); }
+    else if (action === 'fuelIntensity')  { fuelSetIntensity(el); }
+    else if (action === 'fuelCond')       { fuelSetCond(el); }
+  });
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', appInit);
+} else {
+  appInit();
+}
 </script>
 </body>
 </html>
