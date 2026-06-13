@@ -1193,7 +1193,6 @@ function attachDelegatedHandlers() {
     const val = el.dataset.val;
 
     if (action === 'supaSync')       { supaSync(); }
-    else if (action === 'stravaImport')   { fetchStravaForHistory(); }
     else if (action === 'stravaClear')    { clearStravaImports(); }
     else if (action === 'closeLog')  { closeLog(); }
     else if (action === 'deleteLog') { deleteLog(); }
@@ -1797,7 +1796,6 @@ function clearStravaImports() {
   renderHistory();
 }
 
-let stravaImporting = false;
 
 function renderStravaImportBar() {
   const el = document.getElementById("strava-import-bar");
@@ -1807,110 +1805,156 @@ function renderStravaImportBar() {
   const lastSync = localStorage.getItem("strava_import_date");
   const lastStr = lastSync ? new Date(lastSync).toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"}) : null;
 
-  el.innerHTML = `<div style="background:#1a0d08;border:1px solid #fc4c0244;border-radius:12px;padding:12px 14px;margin-bottom:16px">
-    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+  el.innerHTML = `<div style="background:#1a0d08;border:1px solid #fc4c0244;border-radius:12px;padding:14px 16px;margin-bottom:16px">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:${count > 0 ? 0 : 10}px">
       <div>
         <div style="font-size:13px;font-weight:900;color:#fc4c02;letter-spacing:-0.5px">STRAVA</div>
         <div style="font-size:12px;color:#6d5b9e;margin-top:2px">
-          ${stravaImporting ? "Importing activities..." :
-            count > 0 ? `${count} activities imported${lastStr ? " · Last sync "+lastStr : ""}` :
-            "Import your Strava history into this timeline"}
+          ${count > 0
+            ? `${count} activities imported${lastStr ? " · " + lastStr : ""}`
+            : "Upload your Strava activities.csv to populate history"}
         </div>
       </div>
       <div style="display:flex;gap:8px;align-items:center">
         ${count > 0 ? `<button style="background:transparent;border:1px solid #fc4c0266;color:#fc4c02;border-radius:8px;padding:7px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit" data-action="stravaClear">Clear</button>` : ""}
-        <button style="background:${stravaImporting?"#52525b":"#fc4c02"};color:#fff;border:none;border-radius:8px;padding:7px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap" ${stravaImporting?"disabled":""} data-action="stravaImport">
-          ${stravaImporting ? "Importing..." : count > 0 ? "Refresh" : "Import"}
-        </button>
+        <label style="background:#fc4c02;color:#fff;border-radius:8px;padding:7px 14px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap">
+          ${count > 0 ? "Replace CSV" : "Upload CSV"}
+          <input type="file" accept=".csv" style="display:none" onchange="handleStravaCsv(event)">
+        </label>
       </div>
     </div>
-    ${stravaImporting ? `<div style="margin-top:10px"><div style="height:3px;background:#2a1a52;border-radius:2px;overflow:hidden;margin-bottom:4px"><div id="strava-prog-fill" style="height:100%;background:#fc4c02;border-radius:2px;transition:width 0.3s;width:0%"></div></div><div id="strava-prog-text" style="font-size:11px;color:#6d5b9e">Connecting to Strava...</div></div>` : ""}
+    ${count === 0 ? `<div style="font-size:11px;color:#4a3878;line-height:1.6">Strava → Settings → My Account → Download or Delete Your Data → Request Archive → upload <strong style="color:#6d5b9e">activities.csv</strong></div>` : ""}
   </div>`;
 }
 
-async function fetchStravaForHistory() {
-  if (stravaImporting) return;
-  stravaImporting = true;
-  renderStravaImportBar();
+function handleStravaCsv(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const text = e.target.result;
+      const lines = text.split("\n").filter(l => l.trim());
+      if (lines.length < 2) { alert("CSV appears empty."); return; }
 
-  try {
-    // Step 1: fetch up to 200 recent activities via Claude + Strava MCP
-    const setProgress = (pct, msg) => {
-      const fill = document.getElementById("strava-prog-fill");
-      const text = document.getElementById("strava-prog-text");
-      if (fill) fill.style.width = pct + "%";
-      if (text) text.textContent = msg;
-    };
+      // Parse header row — Strava CSV headers vary by locale so find by name
+      const headers = parseCSVLine(lines[0]).map(h => h.trim().toLowerCase().replace(/[^a-z0-9]/g,"_"));
+      const col = name => headers.indexOf(name);
 
-    setProgress(10, "Connecting to Strava...");
+      // Map common Strava CSV column names
+      const iDate      = col("activity_date") >= 0 ? col("activity_date") : col("date");
+      const iName      = col("activity_name") >= 0 ? col("activity_name") : col("name");
+      const iType      = col("activity_type") >= 0 ? col("activity_type") : col("type");
+      const iDist      = col("distance") >= 0 ? col("distance") : -1;
+      const iTime      = col("moving_time") >= 0 ? col("moving_time") : col("elapsed_time") >= 0 ? col("elapsed_time") : -1;
+      const iElev      = col("elevation_gain") >= 0 ? col("elevation_gain") : col("total_elevation_gain") >= 0 ? col("total_elevation_gain") : -1;
+      const iId        = col("activity_id") >= 0 ? col("activity_id") : col("id") >= 0 ? col("id") : -1;
 
-    const response = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: "claude-sonnet-4-6",
-        max_tokens: 4000,
-        system: `You are a fitness data assistant. Use the Strava MCP to fetch the user's activities.
-Fetch as many activities as possible going back 12 months.
-Return ONLY a JSON array, no markdown, no explanation, no backticks. Format:
-[{"id":"123","name":"Morning Run","type":"Run","distance_km":5.2,"duration_mins":28.5,"date":"2026-06-09","elevation_m":120}]
-Rules:
-- type must be one of: Run, Ride, Swim, VirtualRide
-- distance_km: meters converted to km, 2dp
-- duration_mins: elapsed_time seconds converted to decimal minutes, 2dp
-- date: YYYY-MM-DD format
-- elevation_m: total_elevation_gain in metres, integer, 0 if unknown
-- Include ALL activity types, no filtering
-- If no activities found, return []`,
-        messages: [{ role: "user", content: "Fetch all my Strava activities from the last 12 months. Return as JSON array only." }],
-        mcp_servers: [{ type: "url", url: "https://mcp.strava.com/mcp", name: "strava" }]
-      })
-    });
+      if (iDate < 0 || iType < 0) {
+        alert("Could not find required columns (date, type) in CSV. Make sure you're uploading the Strava activities.csv file.");
+        return;
+      }
 
-    setProgress(60, "Processing activities...");
+      const activities = [];
+      for (let i = 1; i < lines.length; i++) {
+        const cols = parseCSVLine(lines[i]);
+        if (cols.length < 3) continue;
 
-    const data = await response.json();
-    const textBlock = data.content?.find(b => b.type === "text");
-    if (!textBlock?.text) throw new Error("No response from Strava");
+        const rawDate = cols[iDate]?.trim() || "";
+        const rawType = cols[iType]?.trim() || "";
+        const name    = cols[iName]?.trim() || "Strava Activity";
+        const distRaw = iDist >= 0 ? cols[iDist]?.trim() : "";
+        const timeRaw = iTime >= 0 ? cols[iTime]?.trim() : "";
+        const elevRaw = iElev >= 0 ? cols[iElev]?.trim() : "";
+        const idRaw   = iId  >= 0 ? cols[iId]?.trim()  : String(i);
 
-    const clean = textBlock.text.replace(/```json|```/g, "").trim();
-    const raw = JSON.parse(clean);
-    if (!Array.isArray(raw)) throw new Error("Invalid response format");
+        // Parse date — Strava uses "MMM DD, YYYY, HH:MM:SS AM" or ISO formats
+        const date = parseStravaDate(rawDate);
+        if (!date) continue;
 
-    setProgress(80, `Processing ${raw.length} activities...`);
+        // Distance: Strava exports in km already
+        const distKm = parseFloat(distRaw.replace(/,/g,"")) || 0;
 
-    // Normalise and deduplicate by id
-    const existing = getStravaImports();
-    const existingIds = new Set(existing.map(a => String(a.id)));
+        // Time: Strava exports moving_time in seconds
+        const durMins = timeRaw ? parseFloat(timeRaw.replace(/,/g,"")) / 60 : 0;
 
-    const normalised = raw.map(a => ({
-      id: String(a.id || Math.random()),
-      name: a.name || "Strava Activity",
-      type: normaliseStravaType(a.type),
-      distance_km: parseFloat(a.distance_km) || 0,
-      duration_mins: parseFloat(a.duration_mins) || 0,
-      date: a.date || "",
-      elevation_m: parseInt(a.elevation_m) || 0,
-      source: "strava",
-    })).filter(a => a.date && !existingIds.has(a.id));
+        // Elevation in metres
+        const elevM = parseFloat(elevRaw.replace(/,/g,"")) || 0;
 
-    const merged = [...existing, ...normalised].sort((a,b) => b.date.localeCompare(a.date));
-    saveStravaImports(merged);
-    localStorage.setItem("strava_import_date", new Date().toISOString());
+        const type = normaliseStravaType(rawType);
 
-    setProgress(100, `Imported ${normalised.length} new activities`);
-    await new Promise(r => setTimeout(r, 600));
+        activities.push({
+          id: idRaw || String(i),
+          name,
+          type,
+          distance_km: Math.round(distKm * 100) / 100,
+          duration_mins: Math.round(durMins * 100) / 100,
+          elevation_m: Math.round(elevM),
+          date,
+          source: "strava",
+        });
+      }
 
-  } catch(e) {
-    console.error("Strava import failed:", e);
-    const text = document.getElementById("strava-prog-text");
-    if (text) text.textContent = "⚠ Import failed — " + (e.message || "check connection");
-    await new Promise(r => setTimeout(r, 2000));
+      if (activities.length === 0) {
+        alert("No activities found in CSV. Check the file is the Strava activities.csv export.");
+        return;
+      }
+
+      // Deduplicate by id
+      const existing = getStravaImports();
+      const existingIds = new Set(existing.map(a => String(a.id)));
+      const newOnes = activities.filter(a => !existingIds.has(String(a.id)));
+      const merged = [...existing, ...newOnes].sort((a,b) => b.date.localeCompare(a.date));
+
+      saveStravaImports(merged);
+      localStorage.setItem("strava_import_date", new Date().toISOString());
+      renderStravaImportBar();
+      renderHistory();
+    } catch(err) {
+      console.error("CSV parse error:", err);
+      alert("Failed to parse CSV: " + err.message);
+    }
+  };
+  reader.readAsText(file);
+}
+
+function parseCSVLine(line) {
+  // Handles quoted fields with commas inside
+  const result = [];
+  let cur = "", inQuote = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (ch === '"') {
+      if (inQuote && line[i+1] === '"') { cur += '"'; i++; }
+      else inQuote = !inQuote;
+    } else if (ch === ',' && !inQuote) {
+      result.push(cur); cur = "";
+    } else {
+      cur += ch;
+    }
   }
+  result.push(cur);
+  return result;
+}
 
-  stravaImporting = false;
-  renderStravaImportBar();
-  renderHistory();
+function parseStravaDate(raw) {
+  if (!raw) return null;
+  // Try ISO first: "2026-06-09" or "2026-06-09T07:30:00Z"
+  const iso = raw.match(/^(\d{4}-\d{2}-\d{2})/);
+  if (iso) return iso[1];
+  // Strava default: "Jun 9, 2026, 7:30:00 AM" or "Jun 09, 2026, 07:30:00 AM"
+  const m = raw.match(/^([A-Za-z]+)\s+(\d{1,2}),\s*(\d{4})/);
+  if (m) {
+    const months = {jan:"01",feb:"02",mar:"03",apr:"04",may:"05",jun:"06",jul:"07",aug:"08",sep:"09",oct:"10",nov:"11",dec:"12"};
+    const mo = months[m[1].toLowerCase().slice(0,3)];
+    if (mo) return `${m[3]}-${mo}-${m[2].padStart(2,"0")}`;
+  }
+  // Last resort: let Date parse it
+  try {
+    const d = new Date(raw);
+    if (!isNaN(d)) return d.toISOString().slice(0,10);
+  } catch(e) {}
+  return null;
 }
 
 function normaliseStravaType(raw) {
