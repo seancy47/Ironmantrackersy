@@ -1262,6 +1262,14 @@ function fuelCalc() {
 let chartMetric = "distance", chartRange = "week";
 let chartInstance = null;
 
+// Sport config for chart — distinct, high-contrast colours
+const CHART_SPORTS = [
+  { key:"run",   label:"Run",   icon:"🏃", color:"#34d399", bg:"#34d39966" }, // emerald
+  { key:"bike",  label:"Bike",  icon:"🚴", color:"#60a5fa", bg:"#60a5fa66" }, // blue
+  { key:"swim",  label:"Swim",  icon:"🏊", color:"#f472b6", bg:"#f472b666" }, // pink
+  { key:"brick", label:"Brick", icon:"⚡", color:"#fbbf24", bg:"#fbbf2466" }, // amber
+];
+
 function setChartMetric(val, el) {
   chartMetric = val;
   document.querySelectorAll(".chart-filter-btn[data-action='chartMetric']").forEach(b => b.classList.remove("active"));
@@ -1277,17 +1285,12 @@ function setChartRange(val, el) {
   renderChart();
 }
 
-function renderChart() {
-  const canvas = document.getElementById("progress-chart");
-  if (!canvas) return;
-  const ctx = canvas.getContext("2d");
-
+function _buildBuckets() {
   const logs = getLogs();
   const cycleStartStr = localStorage.getItem("dt_cycle");
-  if (!cycleStartStr) { ctx.clearRect(0,0,canvas.width,canvas.height); return; }
+  if (!cycleStartStr) return { buckets:{}, cycleStart:null };
   const cycleStart = new Date(cycleStartStr);
 
-  // Build per-day data from logs
   const dayData = {};
   Object.entries(logs).forEach(([key, log]) => {
     if (!log?.completed) return;
@@ -1305,19 +1308,18 @@ function renderChart() {
     const dur = parseFloat(log.duration||0);
     if (!dayData[dateStr]) dayData[dateStr] = { run:0, bike:0, swim:0, brick:0, durRun:0, durBike:0, durSwim:0, durBrick:0, sessions:0 };
     dayData[dateStr][actType] = (dayData[dateStr][actType]||0) + dist;
-    dayData[dateStr]["dur"+actType[0].toUpperCase()+actType.slice(1)] = (dayData[dateStr]["dur"+actType[0].toUpperCase()+actType.slice(1)]||0) + dur;
+    const durKey = "dur"+actType[0].toUpperCase()+actType.slice(1);
+    dayData[dateStr][durKey] = (dayData[dateStr][durKey]||0) + dur;
     dayData[dateStr].sessions++;
   });
 
-  // Bucket into weeks or months
   const buckets = {};
   Object.entries(dayData).forEach(([dateStr, d]) => {
     const date = new Date(dateStr+"T12:00:00");
     let key;
     if (chartRange === "week") {
       const diffDays = Math.floor((date - cycleStart) / 86400000);
-      const wk = Math.floor(diffDays / 7);
-      key = `W${wk+1}`;
+      key = `W${Math.floor(diffDays/7)+1}`;
     } else {
       key = dateStr.slice(0,7);
     }
@@ -1326,65 +1328,161 @@ function renderChart() {
     ["durRun","durBike","durSwim","durBrick"].forEach(k => buckets[key][k] = (buckets[key][k]||0) + (d[k]||0));
   });
 
-  const maxBuckets = { week:12, month:6, "6m":6, "1y":12 }[chartRange] || 8;
+  return { buckets, cycleStart };
+}
+
+function renderChart() {
+  const wrap = document.querySelector(".chart-canvas-wrap");
+  if (!wrap) return;
+
+  const { buckets } = _buildBuckets();
+  const maxBuckets = { week:10, month:6, "6m":6, "1y":12 }[chartRange] || 10;
   const labels = Object.keys(buckets).sort().slice(-maxBuckets);
 
+  // ── Summary mini-cards (volume trend + sport breakdown) ──
+  const allBucketVals = labels.map(l => buckets[l]);
+  const totalSessions = allBucketVals.reduce((s,b)=>s+(b.sessions||0),0);
+  const totalKm = allBucketVals.reduce((s,b)=>s+b.run+b.bike+b.swim+b.brick, 0);
+  const totalMins = allBucketVals.reduce((s,b)=>s+b.durRun+b.durBike+b.durSwim+b.durBrick, 0);
+  const sportTotals = CHART_SPORTS.map(sp => ({
+    ...sp,
+    km: allBucketVals.reduce((s,b)=>s+(b[sp.key]||0),0),
+    sessions: allBucketVals.reduce((s,b)=>s+(b.sessions||0),0),
+  })).filter(sp => sp.km > 0 || totalSessions > 0);
+
+  // Volume trend: is latest bucket higher or lower than previous?
+  const trend = labels.length >= 2
+    ? (() => {
+        const prev = buckets[labels[labels.length-2]];
+        const curr = buckets[labels[labels.length-1]];
+        const prevV = prev.run+prev.bike+prev.swim+prev.brick;
+        const currV = curr.run+curr.bike+curr.swim+curr.brick;
+        if (currV > prevV * 1.05) return "↑";
+        if (currV < prevV * 0.95) return "↓";
+        return "→";
+      })()
+    : "—";
+  const trendColor = trend === "↑" ? "#34d399" : trend === "↓" ? "#f472b6" : "#6d5b9e";
+
+  // Summary row
+  const summaryHtml = `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px">
+    <div style="background:#1a1040;border:1px solid #2a1a52;border-radius:12px;padding:10px 12px;text-align:center">
+      <div style="font-size:9px;color:#4a3878;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:4px">Sessions</div>
+      <div style="font-size:22px;font-weight:900;color:#c4b5fd;letter-spacing:-0.5px">${totalSessions}</div>
+      <div style="font-size:10px;color:#6d5b9e;margin-top:2px">logged</div>
+    </div>
+    <div style="background:#1a1040;border:1px solid #2a1a52;border-radius:12px;padding:10px 12px;text-align:center">
+      <div style="font-size:9px;color:#4a3878;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:4px">Distance</div>
+      <div style="font-size:22px;font-weight:900;color:#c4b5fd;letter-spacing:-0.5px">${totalKm.toFixed(0)}<span style="font-size:12px;font-weight:600;color:#6d5b9e">km</span></div>
+      <div style="font-size:10px;color:${trendColor};margin-top:2px;font-weight:700">${trend} vs prev</div>
+    </div>
+    <div style="background:#1a1040;border:1px solid #2a1a52;border-radius:12px;padding:10px 12px;text-align:center">
+      <div style="font-size:9px;color:#4a3878;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:4px">Time</div>
+      <div style="font-size:22px;font-weight:900;color:#c4b5fd;letter-spacing:-0.5px">${totalMins>0?Math.floor(totalMins/60):"—"}<span style="font-size:12px;font-weight:600;color:#6d5b9e">${totalMins>0?"h":""}</span></div>
+      <div style="font-size:10px;color:#6d5b9e;margin-top:2px">total</div>
+    </div>
+  </div>
+  <div style="display:flex;gap:6px;margin-bottom:14px">
+    ${CHART_SPORTS.map(sp => {
+      const km = allBucketVals.reduce((s,b)=>s+(b[sp.key]||0),0);
+      if (km === 0) return "";
+      const pct = totalKm > 0 ? Math.round((km/totalKm)*100) : 0;
+      return `<div style="flex:1;background:#130c24;border:1px solid ${sp.color}33;border-top:3px solid ${sp.color};border-radius:10px;padding:8px 6px;text-align:center">
+        <div style="font-size:15px">${sp.icon}</div>
+        <div style="font-size:13px;font-weight:800;color:${sp.color};margin:2px 0">${km.toFixed(0)}<span style="font-size:9px;font-weight:600;color:#6d5b9e">km</span></div>
+        <div style="font-size:9px;color:#4a3878;font-weight:700">${pct}%</div>
+      </div>`;
+    }).join("")}
+  </div>`;
+
   if (!labels.length) {
-    ctx.clearRect(0,0,canvas.width,canvas.height);
-    canvas.parentElement.innerHTML = `<div class="chart-empty">Log some workouts to see your progress chart.</div>`;
+    wrap.innerHTML = `<div class="chart-empty">Log some workouts to see your progress chart.</div>`;
     return;
   }
 
-  const types = ["run","bike","swim","brick"];
-  const colors = { run:"#a78bfa", bike:"#c4b5fd", swim:"#818cf8", brick:"#e879f9" };
+  // ── Bar chart — side-by-side, not stacked ──
+  const metricLabel = { distance:"km", duration:"hrs", sessions:"sessions" }[chartMetric] || "km";
 
-  const datasets = types.map(t => ({
-    label: t.charAt(0).toUpperCase()+t.slice(1),
-    backgroundColor: colors[t]+"cc",
-    borderColor: colors[t],
-    borderWidth: 1,
-    borderRadius: 3,
+  const datasets = CHART_SPORTS.map(sp => ({
+    label: `${sp.icon} ${sp.label}`,
+    backgroundColor: sp.bg,
+    borderColor: sp.color,
+    borderWidth: 1.5,
+    borderRadius: 4,
     data: labels.map(l => {
-      const b = buckets[l];
-      if (!b) return 0;
-      if (chartMetric === "distance") return parseFloat((b[t]||0).toFixed(1));
-      if (chartMetric === "duration") return parseFloat(((b["dur"+t.charAt(0).toUpperCase()+t.slice(1)]||0)/60).toFixed(1));
-      if (chartMetric === "sessions") return b.sessions || 0;
+      const b = buckets[l]; if (!b) return 0;
+      if (chartMetric === "distance") return parseFloat((b[sp.key]||0).toFixed(1));
+      if (chartMetric === "duration") {
+        const durKey = "dur"+sp.key[0].toUpperCase()+sp.key.slice(1);
+        return parseFloat(((b[durKey]||0)/60).toFixed(1));
+      }
+      if (chartMetric === "sessions") return b.sessions||0;
       return 0;
     })
   })).filter(ds => ds.data.some(v => v > 0));
 
-  // Destroy old chart
-  if (chartInstance) { try { chartInstance.destroy(); } catch(e) {} chartInstance = null; }
-
-  // Rebuild canvas (fixes sizing after destroy)
-  const wrap = canvas.parentElement;
-  wrap.innerHTML = `<canvas id="progress-chart"></canvas>`;
+  // Inject summary above chart, canvas below
+  wrap.innerHTML = summaryHtml + `<canvas id="progress-chart" style="height:160px"></canvas>`;
   const newCanvas = document.getElementById("progress-chart");
   const newCtx = newCanvas.getContext("2d");
 
+  if (chartInstance) { try { chartInstance.destroy(); } catch(e) {} chartInstance = null; }
+
+  const drawFn = () => _drawChart(newCanvas, newCtx, labels, datasets, metricLabel);
   if (typeof Chart === "undefined") {
-    // Load Chart.js dynamically if not present
     const s = document.createElement("script");
     s.src = "https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js";
-    s.onload = () => _drawChart(newCanvas, newCtx, labels, datasets);
+    s.onload = drawFn;
     document.head.appendChild(s);
   } else {
-    _drawChart(newCanvas, newCtx, labels, datasets);
+    drawFn();
   }
 }
 
-function _drawChart(canvas, ctx, labels, datasets) {
+function _drawChart(canvas, ctx, labels, datasets, metricLabel) {
   chartInstance = new Chart(ctx, {
     type: "bar",
     data: { labels, datasets },
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
+      interaction: { mode:"index", intersect:false },
+      plugins: {
+        legend: {
+          display: true,
+          position: "bottom",
+          labels: {
+            color: "#9d8ec7",
+            font: { size: 10, weight:"700" },
+            boxWidth: 10,
+            boxHeight: 10,
+            borderRadius: 3,
+            padding: 12,
+          }
+        },
+        tooltip: {
+          backgroundColor: "#180f2e",
+          borderColor: "#2a1a52",
+          borderWidth: 1,
+          titleColor: "#c4b5fd",
+          bodyColor: "#9d8ec7",
+          padding: 10,
+          callbacks: {
+            label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y} ${metricLabel}`
+          }
+        }
+      },
       scales: {
-        x: { stacked: true, ticks: { color:"#6d5b9e", font:{ size:10 } }, grid: { color:"#2a1a5222" } },
-        y: { stacked: true, ticks: { color:"#6d5b9e", font:{ size:10 } }, grid: { color:"#2a1a5244" } }
+        x: {
+          grouped: true,
+          ticks: { color:"#6d5b9e", font:{ size:10, weight:"600" } },
+          grid: { color:"#2a1a5220" },
+        },
+        y: {
+          ticks: { color:"#6d5b9e", font:{ size:10 }, callback: v => `${v}${metricLabel==="km"?" km":metricLabel==="hrs"?"h":""}` },
+          grid: { color:"#2a1a5240" },
+          beginAtZero: true,
+        }
       }
     }
   });
