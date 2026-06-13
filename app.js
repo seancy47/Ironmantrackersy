@@ -468,6 +468,8 @@ async function supaUpsert(cn, wi, di, data) {
         bike_distance: parseFloat(data.bikeDistance) || null,
         run_distance: parseFloat(data.runDistance) || null,
         duration: parseFloat(data.duration) || null,
+        avg_hr: parseInt(data.avg_hr) || null,
+        max_hr: parseInt(data.max_hr) || null,
         notes: data.notes || null,
         completed_at: data.completedAt || null,
       })
@@ -504,6 +506,8 @@ async function supaSync() {
         bikeDistance: r.bike_distance != null ? String(r.bike_distance) : "",
         runDistance: r.run_distance != null ? String(r.run_distance) : "",
         duration: r.duration != null ? String(r.duration) : "",
+        avg_hr: r.avg_hr || 0,
+        max_hr: r.max_hr || 0,
         notes: r.notes || "",
         completedAt: r.completed_at,
         cycleNum: r.cycle_num,
