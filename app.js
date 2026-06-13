@@ -944,12 +944,14 @@ function renderHistory() {
     const cfg = TYPE[actType] || TYPE.run;
     const isBrick = actType === "brick";
 
-    // Calculate distance
+    // Calculate distance — use logged value, fall back to plan target
     let distKm = 0;
     if (isBrick) {
       distKm = parseFloat(log.bikeDistance||0) + parseFloat(log.runDistance||0);
+      if (distKm === 0) distKm = day.targetDistance || 0;
     } else {
       distKm = parseFloat(log.distance||0);
+      if (distKm === 0) distKm = day.targetDistance || 0;
     }
     const durMins = parseFloat(log.duration||0);
 
@@ -975,7 +977,15 @@ function renderHistory() {
   const typeCounts = {};
   activities.forEach(a => {
     totalKm += a.distKm;
-    totalMins += a.durMins;
+    // Use logged duration, or estimate from distance if not entered
+    let mins = a.durMins;
+    if (mins === 0 && a.distKm > 0) {
+      if (a.actType === "run") mins = a.distKm * 8;
+      else if (a.actType === "bike") mins = (a.distKm / 22) * 60;
+      else if (a.actType === "swim") mins = a.distKm * 40;
+      else if (a.actType === "brick") mins = (a.distKm * 0.75 / 22) * 60 + (a.distKm * 0.25) * 7;
+    }
+    totalMins += mins;
     if (a.actType === "run") runKm += a.distKm;
     if (a.actType === "bike" || a.actType === "brick") bikeKm += parseFloat(a.log?.bikeDistance||a.distKm||0);
     if (a.actType === "swim") swimKm += a.distKm;
@@ -1052,9 +1062,16 @@ function renderHistory() {
     acts.forEach(a => {
       const { cfg, distKm, durMins, date, actType, log } = a;
       const isBrick = actType === "brick";
+      const isSwim = actType === "swim";
       const h = Math.floor(durMins/60), mm = Math.round(durMins%60);
       const durStr = durMins > 0 ? (h > 0 ? `${h}h ${mm}m` : `${Math.round(durMins)}m`) : "—";
-      const distStr = distKm > 0.05 ? `${distKm.toFixed(1)} km` : "—";
+      // Distance: use logged value, fall back to plan target, show metres for swim
+      const displayKm = distKm > 0 ? distKm : (a.day.targetDistance || 0);
+      let distStr = "—";
+      if (displayKm > 0) {
+        if (isSwim && displayKm < 1) distStr = `${(displayKm*1000).toFixed(0)}m`;
+        else distStr = `${displayKm.toFixed(1)} km`;
+      }
       const feeling = a.log?.feeling !== undefined ? FEELINGS[a.log.feeling] : "";
       const metaParts = [fmtDate(date)];
       if (isBrick && log) metaParts.push(`Bike ${parseFloat(log.bikeDistance||0).toFixed(1)}km · Run ${parseFloat(log.runDistance||0).toFixed(1)}km`);
@@ -1066,7 +1083,7 @@ function renderHistory() {
           <div class="hist-label">${a.day.label}</div>
           <div class="hist-meta">${metaParts.join(" · ")}</div>
           ${feeling ? `<div style="font-size:11px;margin-top:2px">${feeling}</div>` : ""}
-          ${a.notes ? `<div style="font-size:11px;color:var(--faint);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${a.notes}</div>` : ""}
+          ${a.log?.notes ? `<div style="font-size:11px;color:var(--faint);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${a.log.notes}</div>` : ""}
         </div>
         <div class="hist-right">
           <div class="hist-dist" style="color:${cfg.color}">${distStr}</div>
@@ -1326,7 +1343,15 @@ function _buildBuckets() {
     const dateStr = d.toISOString().slice(0,10);
     const actType = log.activityType || day.type;
     const isBrick = actType === "brick";
-    const dist = isBrick ? (parseFloat(log.bikeDistance||0)+parseFloat(log.runDistance||0)) : parseFloat(log.distance||0);
+    // Use logged distance, fall back to plan target distance
+    let dist = 0;
+    if (isBrick) {
+      dist = parseFloat(log.bikeDistance||0) + parseFloat(log.runDistance||0);
+      if (dist === 0) dist = day.targetDistance || 0;
+    } else {
+      dist = parseFloat(log.distance||0);
+      if (dist === 0) dist = day.targetDistance || 0;
+    }
     const dur = parseFloat(log.duration||0);
     if (!dayData[dateStr]) dayData[dateStr] = { run:0, bike:0, swim:0, brick:0, durRun:0, durBike:0, durSwim:0, durBrick:0, sessions:0 };
     dayData[dateStr][actType] = (dayData[dateStr][actType]||0) + dist;
