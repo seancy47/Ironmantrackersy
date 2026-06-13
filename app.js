@@ -470,9 +470,9 @@ async function supaUpsert(cn, wi, di, data) {
     completed_at: data.completedAt || null,
   };
   try {
-    const res = await fetch(`${SUPA_URL}/rest/v1/logs`, {
+    const res = await fetch(`${SUPA_URL}/rest/v1/logs?on_conflict=key`, {
       method: "POST",
-      headers: { ...SUPA_HEADERS, "Prefer": "resolution=merge-duplicates" },
+      headers: { ...SUPA_HEADERS, "Prefer": "resolution=merge-duplicates,return=minimal" },
       body: JSON.stringify(payload)
     });
     if (!res.ok) {
