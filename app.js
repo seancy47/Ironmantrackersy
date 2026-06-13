@@ -1122,13 +1122,13 @@ function renderHistory() {
       }
 
       if (a.source === "strava") {
-        // Strava entry — no plan link, no feeling, show elevation if available
         const elevStr = a.elevM > 0 ? ` · ↑${a.elevM}m` : "";
+        const hrStr = a.avg_hr > 0 ? ` · ♥ ${a.avg_hr}bpm avg` + (a.max_hr > 0 ? ` / ${a.max_hr} max` : "") : "";
         html += `<div class="hist-entry">
           <div class="hist-icon" style="background:${cfg.color}22;border-radius:10px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">${cfg.icon}</div>
           <div class="hist-main">
             <div class="hist-label">${a.name}</div>
-            <div class="hist-meta">${fmtDate(date)}${elevStr}</div>
+            <div class="hist-meta">${fmtDate(date)}${elevStr}${hrStr}</div>
             <div style="font-size:10px;font-weight:700;color:#fc4c02;margin-top:2px;letter-spacing:0.04em">STRAVA</div>
           </div>
           <div class="hist-right">
@@ -1417,7 +1417,7 @@ function _buildBuckets() {
       if (dist === 0) dist = day.targetDistance || 0;
     }
     const dur = parseFloat(log.duration||0);
-    if (!dayData[dateStr]) dayData[dateStr] = { run:0, bike:0, swim:0, brick:0, durRun:0, durBike:0, durSwim:0, durBrick:0, sessions:0 };
+    if (!dayData[dateStr]) dayData[dateStr] = { run:0, bike:0, swim:0, brick:0, durRun:0, durBike:0, durSwim:0, durBrick:0, sessions:0, hrSum:0, hrCount:0 };
     dayData[dateStr][actType] = (dayData[dateStr][actType]||0) + dist;
     const durKey = "dur"+actType[0].toUpperCase()+actType.slice(1);
     dayData[dateStr][durKey] = (dayData[dateStr][durKey]||0) + dur;
@@ -1432,12 +1432,13 @@ function _buildBuckets() {
   );
   getStravaImports().forEach(a => {
     if (!a.date) return;
-    if (planDateTypes.has(`${a.date}:${a.type}`)) return; // plan log takes priority
+    if (planDateTypes.has(`${a.date}:${a.type}`)) return;
     const actType = a.type;
-    if (!dayData[a.date]) dayData[a.date] = { run:0, bike:0, swim:0, brick:0, durRun:0, durBike:0, durSwim:0, durBrick:0, sessions:0 };
+    if (!dayData[a.date]) dayData[a.date] = { run:0, bike:0, swim:0, brick:0, durRun:0, durBike:0, durSwim:0, durBrick:0, sessions:0, hrSum:0, hrCount:0 };
     dayData[a.date][actType] = (dayData[a.date][actType]||0) + (a.distance_km||0);
     const durKey = "dur"+actType[0].toUpperCase()+actType.slice(1);
     dayData[a.date][durKey] = (dayData[a.date][durKey]||0) + (a.duration_mins||0);
+    if (a.avg_hr > 0) { dayData[a.date].hrSum += a.avg_hr; dayData[a.date].hrCount++; }
     dayData[a.date].sessions++;
   });
 
@@ -1451,9 +1452,11 @@ function _buildBuckets() {
     } else {
       key = dateStr.slice(0,7);
     }
-    if (!buckets[key]) buckets[key] = { run:0, bike:0, swim:0, brick:0, durRun:0, durBike:0, durSwim:0, durBrick:0, sessions:0 };
+    if (!buckets[key]) buckets[key] = { run:0, bike:0, swim:0, brick:0, durRun:0, durBike:0, durSwim:0, durBrick:0, sessions:0, hrSum:0, hrCount:0 };
     ["run","bike","swim","brick","sessions"].forEach(k => buckets[key][k] = (buckets[key][k]||0) + (d[k]||0));
     ["durRun","durBike","durSwim","durBrick"].forEach(k => buckets[key][k] = (buckets[key][k]||0) + (d[k]||0));
+    buckets[key].hrSum   += (d.hrSum||0);
+    buckets[key].hrCount += (d.hrCount||0);
   });
 
   return { buckets, cycleStart };
@@ -1519,7 +1522,40 @@ function renderChart() {
   }
 
   // ── Build datasets ──
-  const metricLabel = { distance:"km", duration:"hrs", sessions:"sessions" }[chartMetric] || "km";
+  const metricLabel = { distance:"km", duration:"hrs", sessions:"sessions", hr:"bpm" }[chartMetric] || "km";
+
+  // HR metric: single line chart showing avg HR per bucket
+  if (chartMetric === "hr") {
+    const hrData = labels.map(l => {
+      const b = buckets[l];
+      return (b && b.hrCount > 0) ? Math.round(b.hrSum / b.hrCount) : null;
+    });
+    if (chartInstance) { try { chartInstance.destroy(); } catch(e) {} chartInstance = null; }
+    container.innerHTML += `<div style="position:relative;height:180px;width:100%;overflow:hidden"><canvas id="progress-chart" style="display:block;max-height:180px"></canvas></div>`;
+    const hrCanvas = document.getElementById("progress-chart");
+    const hrCtx = hrCanvas.getContext("2d");
+    const drawHR = () => {
+      hrCanvas.style.height = "180px";
+      chartInstance = new Chart(hrCtx, {
+        type: "line",
+        data: { labels, datasets: [{ label:"Avg HR", data:hrData, borderColor:"#f472b6", backgroundColor:"#f472b622", borderWidth:2, pointBackgroundColor:"#f472b6", pointRadius:4, tension:0.3, fill:true, spanGaps:true }] },
+        options: {
+          responsive:true, maintainAspectRatio:false,
+          plugins: { legend:{display:false}, tooltip:{ backgroundColor:"#180f2e", borderColor:"#2a1a52", borderWidth:1, titleColor:"#c4b5fd", bodyColor:"#9d8ec7", padding:10, callbacks:{ label: ctx => ` ${ctx.parsed.y} bpm avg HR` } } },
+          scales: {
+            x: { ticks:{color:"#6d5b9e",font:{size:10,weight:"600"}}, grid:{color:"#2a1a5220"} },
+            y: { ticks:{color:"#6d5b9e",font:{size:10},callback:v=>`${v}bpm`}, grid:{color:"#2a1a5240"}, beginAtZero:false }
+          }
+        }
+      });
+    };
+    if (typeof Chart === "undefined") {
+      const s = document.createElement("script");
+      s.src = "https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js";
+      s.onload = drawHR; document.head.appendChild(s);
+    } else { drawHR(); }
+    return;
+  }
   const datasets = CHART_SPORTS.map(sp => ({
     label: `${sp.icon} ${sp.label}`,
     backgroundColor: sp.bg,
@@ -1850,14 +1886,15 @@ function handleStravaCsv(event) {
         return -1;
       };
 
-      const iId   = col("Activity ID");
-      const iDate = col("Activity Date");
-      const iName = col("Activity Name");
-      const iType = col("Activity Type");
-      // Column 6 "Distance" is already in km; column 17 "Distance" is in metres — use first occurrence
-      const iDist = col("Distance");
-      const iTime = col("Moving Time", "Elapsed Time");
-      const iElev = col("Elevation Gain");
+      const iId    = col("Activity ID");
+      const iDate  = col("Activity Date");
+      const iName  = col("Activity Name");
+      const iType  = col("Activity Type");
+      const iDist  = col("Distance");
+      const iTime  = col("Moving Time", "Elapsed Time");
+      const iElev  = col("Elevation Gain");
+      const iAvgHR = col("Average Heart Rate");
+      const iMaxHR = col("Max Heart Rate");
 
       if (iDate < 0 || iType < 0) {
         alert("Could not find required columns. Make sure this is the Strava activities.csv export.");
@@ -1873,9 +1910,10 @@ function handleStravaCsv(event) {
         const rawType = iType >= 0 ? (cols[iType]?.trim() || "") : "";
         const name    = iName >= 0 ? (cols[iName]?.trim() || "Strava Activity") : "Strava Activity";
         const rawDist = iDist >= 0 ? (parseFloat(cols[iDist]?.trim() || "0") || 0) : 0;
-        // Moving Time is in seconds
         const durMins = iTime >= 0 ? ((parseFloat(cols[iTime]?.trim() || "0") || 0) / 60) : 0;
         const elevM   = iElev >= 0 ? (parseFloat(cols[iElev]?.trim() || "0") || 0) : 0;
+        const avgHR   = iAvgHR >= 0 ? (parseFloat(cols[iAvgHR]?.trim() || "0") || 0) : 0;
+        const maxHR   = iMaxHR >= 0 ? (parseFloat(cols[iMaxHR]?.trim() || "0") || 0) : 0;
         const idRaw   = iId   >= 0 ? (cols[iId]?.trim() || String(i)) : String(i);
 
         const date = parseStravaDate(rawDate);
@@ -1894,6 +1932,8 @@ function handleStravaCsv(event) {
           distance_km: Math.round(distKm * 100) / 100,
           duration_mins: Math.round(durMins * 100) / 100,
           elevation_m: Math.round(elevM),
+          avg_hr: avgHR > 0 ? Math.round(avgHR) : 0,
+          max_hr: maxHR > 0 ? Math.round(maxHR) : 0,
           date,
           source: "strava",
         });
