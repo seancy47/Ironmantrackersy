@@ -425,7 +425,7 @@ const SUPA_URL = "https://sfnslkdwaldinhaismgz.supabase.co";
 const SUPA_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNmbnNsa2R3YWxkaW5oYWlzbWd6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzMTQwNzMsImV4cCI6MjA5Njg5MDA3M30.r9o-9_3VqhH846AxOW4mQ9thttwUG3XP74KArPHzzaA";
 const SUPA_HEADERS = { "Content-Type": "application/json", "apikey": SUPA_KEY, "Authorization": `Bearer ${SUPA_KEY}` };
 
-function getUserPin() { return localStorage.getItem("app_pin") || ""; }
+function getUserPin() { return "seancy47"; } // fixed user ID — no PIN needed
 
 // Local cache — keeps UI instant, Supabase is source of truth
 function getLogs() { try { return JSON.parse(localStorage.getItem("dt_logs")||"{}"); } catch { return {}; } }
@@ -452,7 +452,6 @@ function removeLogEntry(wi, di) {
 
 // Supabase operations
 async function supaUpsert(cn, wi, di, data) {
-  const pin = getUserPin(); if (!pin) return;
   try {
     await fetch(`${SUPA_URL}/rest/v1/logs`, {
       method: "POST",
@@ -478,7 +477,6 @@ async function supaUpsert(cn, wi, di, data) {
 }
 
 async function supaDelete(cn, wi, di) {
-  const pin = getUserPin(); if (!pin) return;
   try {
     await fetch(`${SUPA_URL}/rest/v1/logs?key=eq.${logKey(cn,wi,di)}&user_pin=eq.${pin}`, {
       method: "DELETE", headers: SUPA_HEADERS
@@ -488,7 +486,7 @@ async function supaDelete(cn, wi, di) {
 
 // Pull all logs from Supabase and update local cache
 async function supaSync() {
-  const pin = getUserPin(); if (!pin) return;
+  const pin = getUserPin();
   try {
     showSyncStatus("syncing");
     const res = await fetch(`${SUPA_URL}/rest/v1/logs?user_pin=eq.${pin}&select=*`, {
