@@ -1830,6 +1830,8 @@ function savePlanStart() {
   renderToday();
   renderPlan(getCurrentWeek());
 }
+
+function sendTestNotif() {
   if (!("Notification" in window)) { alert("Notifications not supported in this browser."); return; }
   if (Notification.permission !== "granted") {
     Notification.requestPermission().then(p => { if (p === "granted") _fireTestNotif(); else alert("Please allow notifications first."); });
