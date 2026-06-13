@@ -1837,56 +1837,54 @@ function handleStravaCsv(event) {
       const lines = text.split("\n").filter(l => l.trim());
       if (lines.length < 2) { alert("CSV appears empty."); return; }
 
-      // Parse header row — Strava CSV headers vary by locale so find by name
-      const headers = parseCSVLine(lines[0]).map(h => h.trim().toLowerCase().replace(/[^a-z0-9]/g,"_"));
-      console.log("Strava CSV headers:", headers);
+      const headers = parseCSVLine(lines[0]).map(h => h.trim());
 
-      // Map common Strava CSV column names — try multiple variants
-      const col = (...names) => { for (const n of names) { const i = headers.indexOf(n); if (i >= 0) return i; } return -1; };
+      // Find columns by exact Strava header name
+      const col = (...names) => {
+        for (const n of names) {
+          const i = headers.indexOf(n);
+          if (i >= 0) return i;
+        }
+        return -1;
+      };
 
-      const iDate = col("activity_date", "date", "start_date");
-      const iName = col("activity_name", "name", "title");
-      const iType = col("activity_type", "type", "sport_type");
-      const iDist = col("distance", "distance_km", "distance__km_");
-      const iTime = col("moving_time", "elapsed_time", "moving_time__seconds_", "elapsed_time__seconds_");
-      const iElev = col("elevation_gain", "total_elevation_gain", "elevation_gain__m_", "elev_high");
-      const iId   = col("activity_id", "id", "activity_id__id_");
+      const iId   = col("Activity ID");
+      const iDate = col("Activity Date");
+      const iName = col("Activity Name");
+      const iType = col("Activity Type");
+      // Column 6 "Distance" is already in km; column 17 "Distance" is in metres — use first occurrence
+      const iDist = col("Distance");
+      const iTime = col("Moving Time", "Elapsed Time");
+      const iElev = col("Elevation Gain");
 
       if (iDate < 0 || iType < 0) {
-        alert("Could not find required columns (date, type) in CSV. Make sure you're uploading the Strava activities.csv file.");
+        alert("Could not find required columns. Make sure this is the Strava activities.csv export.");
         return;
       }
 
       const activities = [];
       for (let i = 1; i < lines.length; i++) {
         const cols = parseCSVLine(lines[i]);
-        if (cols.length < 3) continue;
+        if (cols.length < 4) continue;
 
         const rawDate = cols[iDate]?.trim() || "";
         const rawType = iType >= 0 ? (cols[iType]?.trim() || "") : "";
         const name    = iName >= 0 ? (cols[iName]?.trim() || "Strava Activity") : "Strava Activity";
-        const distRaw = iDist >= 0 ? (cols[iDist]?.trim() || "0") : "0";
-        const timeRaw = iTime >= 0 ? (cols[iTime]?.trim() || "0") : "0";
-        const elevRaw = iElev >= 0 ? (cols[iElev]?.trim() || "0") : "0";
-        const idRaw   = iId  >= 0 ? (cols[iId]?.trim()  || String(i)) : String(i);
+        // Distance column 6 is already in km
+        const distKm  = iDist >= 0 ? (parseFloat(cols[iDist]?.trim() || "0") || 0) : 0;
+        // Moving Time is in seconds
+        const durMins = iTime >= 0 ? ((parseFloat(cols[iTime]?.trim() || "0") || 0) / 60) : 0;
+        const elevM   = iElev >= 0 ? (parseFloat(cols[iElev]?.trim() || "0") || 0) : 0;
+        const idRaw   = iId   >= 0 ? (cols[iId]?.trim() || String(i)) : String(i);
 
-        // Parse date — Strava uses "MMM DD, YYYY, HH:MM:SS AM" or ISO formats
         const date = parseStravaDate(rawDate);
         if (!date) continue;
 
-        // Distance: Strava exports in km already
-        const distKm = parseFloat(distRaw.replace(/,/g,"")) || 0;
-
-        // Time: Strava exports moving_time in seconds
-        const durMins = timeRaw ? parseFloat(timeRaw.replace(/,/g,"")) / 60 : 0;
-
-        // Elevation in metres
-        const elevM = parseFloat(elevRaw.replace(/,/g,"")) || 0;
-
         const type = normaliseStravaType(rawType);
+        if (!type) continue; // skip activities we don't track (walks, etc.)
 
         activities.push({
-          id: idRaw || String(i),
+          id: idRaw,
           name,
           type,
           distance_km: Math.round(distKm * 100) / 100,
@@ -1902,16 +1900,12 @@ function handleStravaCsv(event) {
         return;
       }
 
-      // Deduplicate by id
-      const existing = getStravaImports();
-      const existingIds = new Set(existing.map(a => String(a.id)));
-      const newOnes = activities.filter(a => !existingIds.has(String(a.id)));
-      const merged = [...existing, ...newOnes].sort((a,b) => b.date.localeCompare(a.date));
-
-      saveStravaImports(merged);
+      // Deduplicate by id — replace all existing with fresh import
+      saveStravaImports(activities.sort((a,b) => b.date.localeCompare(a.date)));
       localStorage.setItem("strava_import_date", new Date().toISOString());
       renderStravaImportBar();
       renderHistory();
+
     } catch(err) {
       console.error("CSV parse error:", err);
       alert("Failed to parse CSV: " + err.message);
@@ -1960,9 +1954,9 @@ function parseStravaDate(raw) {
 }
 
 function normaliseStravaType(raw) {
-  const t = (raw||"").toLowerCase();
-  if (t === "run" || t === "trailrun") return "run";
-  if (t === "ride" || t === "virtualride" || t === "mountainbikeride" || t === "gravelride") return "bike";
+  const t = (raw||"").toLowerCase().trim();
+  if (t === "run" || t === "trailrun" || t === "virtualrun") return "run";
+  if (t === "ride" || t === "virtualride" || t === "mountainbikeride" || t === "gravelride" || t === "ebikeride") return "bike";
   if (t === "swim") return "swim";
-  return "run"; // default
+  return null; // walk, yoga, weighttraining etc — skip
 }
