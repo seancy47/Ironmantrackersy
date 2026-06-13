@@ -1,0 +1,1133 @@
+
+const PLAN = {
+  principles: [
+    { icon:"🏊", label:"Swim Gap", desc:"Biggest limiter — prioritise technique before volume. You're at 325m now, target 3.8km." },
+    { icon:"🚴", label:"Loop Training", desc:"1 loop = 21.7km, ~250m gain. All rides prescribed in loops. Hilly training = race-day advantage." },
+    { icon:"⚠️", label:"Injury First", desc:"Right ankle, left calf, Achilles — stop immediately at any sharp pain. Never run through it." },
+    { icon:"😴", label:"Wed + Sun Rest", desc:"Wednesday buffers the hard Mon/Tue block. Sunday rest grows more critical from Phase 3 onwards." },
+  ],
+  weeks: [
+    { label:"Week 1", type:"build", tag:"Ph.1 W1", days:[
+      { day:"Mon", type:"bike", label:"Long Bike - 1/2 loop", detail:"Ride to the 10km turnaround (~150m gain) and return. ~21km easy spin. Aerobic base only.", effort:1, targetDistance:21 },
+      { day:"Tue", type:"run", label:"Easy Run", detail:"5km continuous at 7:30-8:30/km. Stop immediately at any ankle or shin pain.", effort:1, targetDistance:5 },
+      { day:"Wed", type:"rest", label:"Rest", detail:"Full rest. Non-negotiable buffer after Mon/Tue block.", effort:0 },
+      { day:"Thu", type:"bike", label:"Bike - moderate", detail:"1/2 loop easy (21km). Legs fresher than Monday. Keep it aerobic.", effort:1, targetDistance:21 },
+      { day:"Fri", type:"swim", label:"Swim - 300m", detail:"300m pool. Technique drills: catch-up, pull buoy, bilateral breathing. Comfort not speed.", effort:1, targetDistance:0.3 },
+      { day:"Sat", type:"run", label:"Easy Run + Strength", detail:"4-5km easy at 7:30-8:30/km. Then 20 min: single-leg RDLs, calf raises, glute bridges, ankle alphabet.", effort:1, targetDistance:4.5 },
+      { day:"Sun", type:"swim", label:"Swim (optional)", detail:"300-400m easy. Low-impact. Skip if fatigued.", effort:1, targetDistance:0.35 },
+    ]},
+    { label:"Week 2", type:"build", tag:"Ph.1 W2", days:[
+      { day:"Mon", type:"bike", label:"Long Bike - 1/2 loop", detail:"Ride to the 10km turnaround (~150m gain) and return. ~21km easy spin. Aerobic base only.", effort:1, targetDistance:21 },
+      { day:"Tue", type:"run", label:"Easy Run", detail:"5km continuous at 7:30-8:30/km. Stop immediately at any ankle or shin pain.", effort:1, targetDistance:5 },
+      { day:"Wed", type:"rest", label:"Rest", detail:"Full rest. Non-negotiable buffer after Mon/Tue block.", effort:0 },
+      { day:"Thu", type:"bike", label:"Bike - moderate", detail:"1/2 loop easy (21km). Legs fresher than Monday. Keep it aerobic.", effort:1, targetDistance:21 },
+      { day:"Fri", type:"swim", label:"Swim - 350m", detail:"350m pool. Technique drills: catch-up, pull buoy, bilateral breathing. Comfort not speed.", effort:1, targetDistance:0.35 },
+      { day:"Sat", type:"run", label:"Easy Run + Strength", detail:"4-5km easy at 7:30-8:30/km. Then 20 min: single-leg RDLs, calf raises, glute bridges, ankle alphabet.", effort:1, targetDistance:4.5 },
+      { day:"Sun", type:"swim", label:"Swim (optional)", detail:"300-400m easy. Low-impact. Skip if fatigued.", effort:1, targetDistance:0.35 },
+    ]},
+    { label:"Week 3", type:"build", tag:"Ph.1 W3", days:[
+      { day:"Mon", type:"bike", label:"Long Bike - 1/2 loop", detail:"Ride to the 10km turnaround (~150m gain) and return. ~21km easy spin. Aerobic base only.", effort:1, targetDistance:21 },
+      { day:"Tue", type:"run", label:"Easy Run", detail:"5km continuous at 7:30-8:30/km. Stop immediately at any ankle or shin pain.", effort:1, targetDistance:5 },
+      { day:"Wed", type:"rest", label:"Rest", detail:"Full rest. Non-negotiable buffer after Mon/Tue block.", effort:0 },
+      { day:"Thu", type:"bike", label:"Bike - moderate", detail:"1/2 loop easy (21km). Legs fresher than Monday. Keep it aerobic.", effort:1, targetDistance:21 },
+      { day:"Fri", type:"swim", label:"Swim - 400m", detail:"400m pool. Technique drills: catch-up, pull buoy, bilateral breathing. Comfort not speed.", effort:1, targetDistance:0.4 },
+      { day:"Sat", type:"run", label:"Easy Run + Strength", detail:"4-5km easy at 7:30-8:30/km. Then 20 min: single-leg RDLs, calf raises, glute bridges, ankle alphabet.", effort:1, targetDistance:4.5 },
+      { day:"Sun", type:"swim", label:"Swim (optional)", detail:"300-400m easy. Low-impact. Skip if fatigued.", effort:1, targetDistance:0.35 },
+    ]},
+    { label:"Week 4", type:"build", tag:"Ph.1 W4", days:[
+      { day:"Mon", type:"bike", label:"Long Bike - 1/2 loop", detail:"Ride to the 10km turnaround (~150m gain) and return. ~21km easy spin. Aerobic base only.", effort:1, targetDistance:21 },
+      { day:"Tue", type:"run", label:"Easy Run", detail:"5km continuous at 7:30-8:30/km. Stop immediately at any ankle or shin pain.", effort:1, targetDistance:5 },
+      { day:"Wed", type:"rest", label:"Rest", detail:"Full rest. Non-negotiable buffer after Mon/Tue block.", effort:0 },
+      { day:"Thu", type:"bike", label:"Bike - moderate", detail:"1/2 loop easy (21km). Legs fresher than Monday. Keep it aerobic.", effort:1, targetDistance:21 },
+      { day:"Fri", type:"swim", label:"Swim - 450m", detail:"450m pool. Technique drills: catch-up, pull buoy, bilateral breathing. Comfort not speed.", effort:1, targetDistance:0.45 },
+      { day:"Sat", type:"run", label:"Easy Run + Strength", detail:"4-5km easy at 7:30-8:30/km. Then 20 min: single-leg RDLs, calf raises, glute bridges, ankle alphabet.", effort:1, targetDistance:4.5 },
+      { day:"Sun", type:"swim", label:"Swim (optional)", detail:"300-400m easy. Low-impact. Skip if fatigued.", effort:1, targetDistance:0.35 },
+    ]},
+    { label:"Week 5", type:"build", tag:"Ph.1 W5", days:[
+      { day:"Mon", type:"bike", label:"Long Bike - 1 loop", detail:"1 full loop (21.7km, ~250m gain). Easy pace throughout. No chasing speed on descents.", effort:2, targetDistance:21.7 },
+      { day:"Tue", type:"run", label:"Easy Run", detail:"5km easy at 7:30-8:30/km. Heavy legs from Monday - keep it genuinely easy.", effort:1, targetDistance:5 },
+      { day:"Wed", type:"rest", label:"Rest", detail:"Full rest.", effort:0 },
+      { day:"Thu", type:"bike", label:"Bike - moderate", detail:"1/2 loop easy (21km). Notice legs recovering through the ride.", effort:1, targetDistance:21 },
+      { day:"Fri", type:"swim", label:"Swim - 400m", detail:"400m pool. Building endurance: bilateral breathing, consistent stroke. Add 50m from last week.", effort:1, targetDistance:0.4 },
+      { day:"Sat", type:"run", label:"Easy Run + Strength", detail:"5km easy. Then 20 min hip stability and ankle work: clamshells, heel drops, glute med.", effort:1, targetDistance:5 },
+      { day:"Sun", type:"swim", label:"Swim (optional)", detail:"400-500m easy. Skip if Mon/Tue left residual tiredness.", effort:1, targetDistance:0.45 },
+    ]},
+    { label:"Week 6", type:"build", tag:"Ph.1 W6", days:[
+      { day:"Mon", type:"bike", label:"Long Bike - 1 loop", detail:"1 full loop (21.7km, ~250m gain). Easy pace throughout. No chasing speed on descents.", effort:2, targetDistance:21.7 },
+      { day:"Tue", type:"run", label:"Easy Run", detail:"5km easy at 7:30-8:30/km. Heavy legs from Monday - keep it genuinely easy.", effort:1, targetDistance:5 },
+      { day:"Wed", type:"rest", label:"Rest", detail:"Full rest.", effort:0 },
+      { day:"Thu", type:"bike", label:"Bike - moderate", detail:"1/2 loop easy (21km). Notice legs recovering through the ride.", effort:1, targetDistance:21 },
+      { day:"Fri", type:"swim", label:"Swim - 450m", detail:"450m pool. Building endurance: bilateral breathing, consistent stroke. Add 50m from last week.", effort:1, targetDistance:0.45 },
+      { day:"Sat", type:"run", label:"Easy Run + Strength", detail:"5km easy. Then 20 min hip stability and ankle work: clamshells, heel drops, glute med.", effort:1, targetDistance:5 },
+      { day:"Sun", type:"swim", label:"Swim (optional)", detail:"400-500m easy. Skip if Mon/Tue left residual tiredness.", effort:1, targetDistance:0.45 },
+    ]},
+    { label:"Week 7", type:"build", tag:"Ph.1 W7", days:[
+      { day:"Mon", type:"bike", label:"Long Bike - 1 loop", detail:"1 full loop (21.7km, ~250m gain). Easy pace throughout. No chasing speed on descents.", effort:2, targetDistance:21.7 },
+      { day:"Tue", type:"run", label:"Easy Run", detail:"5km easy at 7:30-8:30/km. Heavy legs from Monday - keep it genuinely easy.", effort:1, targetDistance:5 },
+      { day:"Wed", type:"rest", label:"Rest", detail:"Full rest.", effort:0 },
+      { day:"Thu", type:"bike", label:"Bike - moderate", detail:"1/2 loop easy (21km). Notice legs recovering through the ride.", effort:1, targetDistance:21 },
+      { day:"Fri", type:"swim", label:"Swim - 500m", detail:"500m pool. Building endurance: bilateral breathing, consistent stroke. Add 50m from last week.", effort:1, targetDistance:0.5 },
+      { day:"Sat", type:"run", label:"Easy Run + Strength", detail:"5km easy. Then 20 min hip stability and ankle work: clamshells, heel drops, glute med.", effort:1, targetDistance:5 },
+      { day:"Sun", type:"swim", label:"Swim (optional)", detail:"400-500m easy. Skip if Mon/Tue left residual tiredness.", effort:1, targetDistance:0.45 },
+    ]},
+    { label:"Week 8", type:"recovery", tag:"Ph.1 W8", days:[
+      { day:"Mon", type:"bike", label:"Long Bike - 1 loop", detail:"1 full loop (21.7km, ~250m gain). Easy pace throughout. No chasing speed on descents.", effort:2, targetDistance:21.7 },
+      { day:"Tue", type:"run", label:"Easy Run", detail:"5km easy at 7:30-8:30/km. Heavy legs from Monday - keep it genuinely easy.", effort:1, targetDistance:5 },
+      { day:"Wed", type:"rest", label:"Rest", detail:"Full rest.", effort:0 },
+      { day:"Thu", type:"bike", label:"Bike - moderate", detail:"1/2 loop easy (21km). Notice legs recovering through the ride.", effort:1, targetDistance:21 },
+      { day:"Fri", type:"swim", label:"Swim - 550m", detail:"550m pool. Building endurance: bilateral breathing, consistent stroke. Add 50m from last week.", effort:1, targetDistance:0.55 },
+      { day:"Sat", type:"run", label:"Easy Run + Strength", detail:"5km easy. Then 20 min hip stability and ankle work: clamshells, heel drops, glute med.", effort:1, targetDistance:5 },
+      { day:"Sun", type:"swim", label:"Swim (optional)", detail:"400-500m easy. Skip if Mon/Tue left residual tiredness.", effort:1, targetDistance:0.45 },
+    ]},
+    { label:"Week 9", type:"build", tag:"Ph.2 W1", days:[
+      { day:"Mon", type:"bike", label:"Long Bike - 1.5 loops", detail:"~33km, ~375m gain. Nutrition every 45 min on rides over 90 min. Fuel before the climb.", effort:2, targetDistance:33 },
+      { day:"Tue", type:"run", label:"Long Run - 8km", detail:"8km easy. Deliberately tired legs from Monday. 10min run/1min walk if needed. HR under 150bpm.", effort:2, targetDistance:8 },
+      { day:"Wed", type:"rest", label:"Rest", detail:"Full rest. Wednesday buffers the Mon/Tue block.", effort:0 },
+      { day:"Thu", type:"bike", label:"Bike - 1 loop", detail:"~21.7km. On loops 2+, treat the climb as light tempo.", effort:2, targetDistance:21.7 },
+      { day:"Fri", type:"swim", label:"Swim - 600m", detail:"600m continuous. Endurance focus - bilateral breathing, consistent stroke rate.", effort:1, targetDistance:0.6 },
+      { day:"Sat", type:"run", label:"Easy Run - 6km", detail:"6km easy followed by hip stability and core work.", effort:1, targetDistance:6 },
+      { day:"Sun", type:"swim", label:"Swim (optional) - 500m", detail:"500m easy. Optional - skip if fatigued.", effort:1, targetDistance:0.5 },
+    ]},
+    { label:"Week 10", type:"build", tag:"Ph.2 W2", days:[
+      { day:"Mon", type:"bike", label:"Long Bike - 1.5 loops", detail:"~33km, ~375m gain. Nutrition every 45 min on rides over 90 min. Fuel before the climb.", effort:2, targetDistance:33 },
+      { day:"Tue", type:"run", label:"Long Run - 9km", detail:"9km easy. Deliberately tired legs from Monday. 10min run/1min walk if needed. HR under 150bpm.", effort:2, targetDistance:9 },
+      { day:"Wed", type:"rest", label:"Rest", detail:"Full rest. Wednesday buffers the Mon/Tue block.", effort:0 },
+      { day:"Thu", type:"bike", label:"Bike - 1 loop", detail:"~21.7km. On loops 2+, treat the climb as light tempo.", effort:2, targetDistance:21.7 },
+      { day:"Fri", type:"swim", label:"Swim - 700m", detail:"700m continuous. Endurance focus - bilateral breathing, consistent stroke rate.", effort:1, targetDistance:0.7 },
+      { day:"Sat", type:"run", label:"Easy Run - 6km", detail:"6km easy followed by hip stability and core work.", effort:1, targetDistance:6 },
+      { day:"Sun", type:"swim", label:"Swim (optional) - 550m", detail:"550m easy. Optional - skip if fatigued.", effort:1, targetDistance:0.55 },
+    ]},
+    { label:"Week 11", type:"build", tag:"Ph.2 W3", days:[
+      { day:"Mon", type:"bike", label:"Long Bike - 2 loops", detail:"~43km, ~500m gain. Nutrition every 45 min on rides over 90 min. Fuel before the climb.", effort:2, targetDistance:43 },
+      { day:"Tue", type:"run", label:"Long Run - 10km", detail:"10km easy. Deliberately tired legs from Monday. 10min run/1min walk if needed. HR under 150bpm.", effort:2, targetDistance:10 },
+      { day:"Wed", type:"rest", label:"Rest", detail:"Full rest. Wednesday buffers the Mon/Tue block.", effort:0 },
+      { day:"Thu", type:"bike", label:"Bike - 1.5 loops", detail:"~33km. On loops 2+, treat the climb as light tempo.", effort:2, targetDistance:33 },
+      { day:"Fri", type:"swim", label:"Swim - 800m", detail:"800m continuous. Endurance focus - bilateral breathing, consistent stroke rate.", effort:1, targetDistance:0.8 },
+      { day:"Sat", type:"run", label:"Easy Run - 7km", detail:"7km easy followed by hip stability and core work.", effort:1, targetDistance:7 },
+      { day:"Sun", type:"swim", label:"Swim (optional) - 600m", detail:"600m easy. Optional - skip if fatigued.", effort:1, targetDistance:0.6 },
+    ]},
+    { label:"Week 12", type:"recovery", tag:"Ph.2 W4", days:[
+      { day:"Mon", type:"bike", label:"Long Bike - 1.5 loops", detail:"~33km, ~375m gain. Easy aerobic - recovery week.", effort:1, targetDistance:33 },
+      { day:"Tue", type:"run", label:"Long Run - 6km", detail:"6km easy. Deliberately tired legs from Monday. Keep it very easy - recovery week.", effort:1, targetDistance:6 },
+      { day:"Wed", type:"rest", label:"Rest", detail:"Full rest. Wednesday buffers the Mon/Tue block.", effort:0 },
+      { day:"Thu", type:"bike", label:"Bike - 1 loop", detail:"~21.7km. Easy spin.", effort:1, targetDistance:21.7 },
+      { day:"Fri", type:"swim", label:"Swim - 600m", detail:"600m continuous. Endurance focus - bilateral breathing, consistent stroke rate.", effort:1, targetDistance:0.6 },
+      { day:"Sat", type:"run", label:"Easy Run - 5km", detail:"5km easy followed by hip stability and core work.", effort:1, targetDistance:5 },
+      { day:"Sun", type:"rest", label:"Rest", detail:"Full rest.", effort:0 },
+    ]},
+    { label:"Week 13", type:"build", tag:"Ph.2 W5", days:[
+      { day:"Mon", type:"bike", label:"Long Bike - 2 loops", detail:"~43km, ~500m gain. Nutrition every 45 min on rides over 90 min. Fuel before the climb.", effort:2, targetDistance:43 },
+      { day:"Tue", type:"run", label:"Long Run - 12km", detail:"12km easy. Deliberately tired legs from Monday. 10min run/1min walk if needed. HR under 150bpm.", effort:2, targetDistance:12 },
+      { day:"Wed", type:"rest", label:"Rest", detail:"Full rest. Wednesday buffers the Mon/Tue block.", effort:0 },
+      { day:"Thu", type:"bike", label:"Bike - 1.5 loops", detail:"~33km. On loops 2+, treat the climb as light tempo.", effort:2, targetDistance:33 },
+      { day:"Fri", type:"swim", label:"Swim - 900m", detail:"900m continuous. Endurance focus - bilateral breathing, consistent stroke rate.", effort:1, targetDistance:0.9 },
+      { day:"Sat", type:"run", label:"Easy Run - 7km", detail:"7km easy followed by hip stability and core work.", effort:1, targetDistance:7 },
+      { day:"Sun", type:"swim", label:"Swim (optional) - 700m", detail:"700m easy. Optional - skip if fatigued.", effort:1, targetDistance:0.7 },
+    ]},
+    { label:"Week 14", type:"build", tag:"Ph.2 W6", days:[
+      { day:"Mon", type:"bike", label:"Long Bike - 2 loops", detail:"~43km, ~500m gain. Nutrition every 45 min on rides over 90 min. Fuel before the climb.", effort:2, targetDistance:43 },
+      { day:"Tue", type:"run", label:"Long Run - 13km", detail:"13km easy. Deliberately tired legs from Monday. 10min run/1min walk if needed. HR under 150bpm.", effort:2, targetDistance:13 },
+      { day:"Wed", type:"rest", label:"Rest", detail:"Full rest. Wednesday buffers the Mon/Tue block.", effort:0 },
+      { day:"Thu", type:"bike", label:"Bike - 1.5 loops", detail:"~33km. On loops 2+, treat the climb as light tempo.", effort:2, targetDistance:33 },
+      { day:"Fri", type:"swim", label:"Swim - 1000m", detail:"1000m continuous. Endurance focus - bilateral breathing, consistent stroke rate.", effort:1, targetDistance:1.0 },
+      { day:"Sat", type:"run", label:"Easy Run - 7km", detail:"7km easy followed by hip stability and core work.", effort:1, targetDistance:7 },
+      { day:"Sun", type:"swim", label:"Swim (optional) - 700m", detail:"700m easy. Optional - skip if fatigued.", effort:1, targetDistance:0.7 },
+    ]},
+    { label:"Week 15", type:"build", tag:"Ph.2 W7", days:[
+      { day:"Mon", type:"bike", label:"Long Bike - 2.5 loops", detail:"~54km, ~625m gain. Nutrition every 45 min on rides over 90 min. Fuel before the climb.", effort:2, targetDistance:54 },
+      { day:"Tue", type:"run", label:"Long Run - 14km", detail:"14km easy. Deliberately tired legs from Monday. 10min run/1min walk if needed. HR under 150bpm.", effort:2, targetDistance:14 },
+      { day:"Wed", type:"rest", label:"Rest", detail:"Full rest. Wednesday buffers the Mon/Tue block.", effort:0 },
+      { day:"Thu", type:"bike", label:"Bike - 2 loops", detail:"~43km. On loops 2+, treat the climb as light tempo.", effort:2, targetDistance:43 },
+      { day:"Fri", type:"swim", label:"Swim - 1100m", detail:"1100m continuous. Endurance focus - bilateral breathing, consistent stroke rate.", effort:1, targetDistance:1.1 },
+      { day:"Sat", type:"run", label:"Easy Run - 8km", detail:"8km easy followed by hip stability and core work.", effort:1, targetDistance:8 },
+      { day:"Sun", type:"swim", label:"Swim (optional) - 750m", detail:"750m easy. Optional - skip if fatigued.", effort:1, targetDistance:0.75 },
+    ]},
+    { label:"Week 16", type:"recovery", tag:"Ph.2 W8", days:[
+      { day:"Mon", type:"bike", label:"Long Bike - 1.5 loops", detail:"~33km, ~375m gain. Easy aerobic - recovery week.", effort:1, targetDistance:33 },
+      { day:"Tue", type:"run", label:"Long Run - 8km", detail:"8km easy. Deliberately tired legs from Monday. Keep it very easy - recovery week.", effort:1, targetDistance:8 },
+      { day:"Wed", type:"rest", label:"Rest", detail:"Full rest. Wednesday buffers the Mon/Tue block.", effort:0 },
+      { day:"Thu", type:"bike", label:"Bike - 1 loop", detail:"~21.7km. Easy spin.", effort:1, targetDistance:21.7 },
+      { day:"Fri", type:"swim", label:"Swim - 700m", detail:"700m continuous. Endurance focus - bilateral breathing, consistent stroke rate.", effort:1, targetDistance:0.7 },
+      { day:"Sat", type:"run", label:"Easy Run - 6km", detail:"6km easy followed by hip stability and core work.", effort:1, targetDistance:6 },
+      { day:"Sun", type:"rest", label:"Rest", detail:"Full rest.", effort:0 },
+    ]},
+    { label:"Week 17", type:"build", tag:"Ph.2 W9", days:[
+      { day:"Mon", type:"bike", label:"Long Bike - 2.5 loops", detail:"~54km, ~625m gain. Nutrition every 45 min on rides over 90 min. Fuel before the climb.", effort:2, targetDistance:54 },
+      { day:"Tue", type:"run", label:"Long Run - 16km", detail:"16km easy. Deliberately tired legs from Monday. 10min run/1min walk if needed. HR under 150bpm.", effort:2, targetDistance:16 },
+      { day:"Wed", type:"rest", label:"Rest", detail:"Full rest. Wednesday buffers the Mon/Tue block.", effort:0 },
+      { day:"Thu", type:"bike", label:"Bike - 2 loops", detail:"~43km. On loops 2+, treat the climb as light tempo.", effort:2, targetDistance:43 },
+      { day:"Fri", type:"swim", label:"Swim - 1200m", detail:"1200m continuous. Endurance focus - bilateral breathing, consistent stroke rate.", effort:1, targetDistance:1.2 },
+      { day:"Sat", type:"run", label:"Easy Run - 8km", detail:"8km easy followed by hip stability and core work.", effort:1, targetDistance:8 },
+      { day:"Sun", type:"swim", label:"Swim (optional) - 800m", detail:"800m easy. Optional - skip if fatigued.", effort:1, targetDistance:0.8 },
+    ]},
+    { label:"Week 18", type:"build", tag:"Ph.2 W10", days:[
+      { day:"Mon", type:"bike", label:"Long Bike - 2.5 loops", detail:"~54km, ~625m gain. Nutrition every 45 min on rides over 90 min. Fuel before the climb.", effort:2, targetDistance:54 },
+      { day:"Tue", type:"run", label:"Long Run - 16km", detail:"16km easy. Deliberately tired legs from Monday. 10min run/1min walk if needed. HR under 150bpm.", effort:2, targetDistance:16 },
+      { day:"Wed", type:"rest", label:"Rest", detail:"Full rest. Wednesday buffers the Mon/Tue block.", effort:0 },
+      { day:"Thu", type:"bike", label:"Bike - 2 loops", detail:"~43km. On loops 2+, treat the climb as light tempo.", effort:2, targetDistance:43 },
+      { day:"Fri", type:"swim", label:"Swim - 1200m", detail:"1200m continuous. Endurance focus - bilateral breathing, consistent stroke rate.", effort:1, targetDistance:1.2 },
+      { day:"Sat", type:"run", label:"Easy Run - 8km", detail:"8km easy followed by hip stability and core work.", effort:1, targetDistance:8 },
+      { day:"Sun", type:"swim", label:"Swim (optional) - 800m", detail:"800m easy. Optional - skip if fatigued.", effort:1, targetDistance:0.8 },
+    ]},
+    { label:"Week 19", type:"build", tag:"Ph.2 W11", days:[
+      { day:"Mon", type:"bike", label:"Long Bike - 2.5 loops", detail:"~54km, ~625m gain. Nutrition every 45 min on rides over 90 min. Fuel before the climb.", effort:2, targetDistance:54 },
+      { day:"Tue", type:"run", label:"Long Run - 16km", detail:"16km easy. Deliberately tired legs from Monday. 10min run/1min walk if needed. HR under 150bpm.", effort:2, targetDistance:16 },
+      { day:"Wed", type:"rest", label:"Rest", detail:"Full rest. Wednesday buffers the Mon/Tue block.", effort:0 },
+      { day:"Thu", type:"bike", label:"Bike - 2 loops", detail:"~43km. On loops 2+, treat the climb as light tempo.", effort:2, targetDistance:43 },
+      { day:"Fri", type:"swim", label:"Swim - 1200m", detail:"1200m continuous. Endurance focus - bilateral breathing, consistent stroke rate.", effort:1, targetDistance:1.2 },
+      { day:"Sat", type:"run", label:"Easy Run - 8km", detail:"8km easy followed by hip stability and core work.", effort:1, targetDistance:8 },
+      { day:"Sun", type:"swim", label:"Swim (optional) - 800m", detail:"800m easy. Optional - skip if fatigued.", effort:1, targetDistance:0.8 },
+    ]},
+    { label:"Week 20", type:"recovery", tag:"Ph.2 W12", days:[
+      { day:"Mon", type:"bike", label:"Long Bike - 1.5 loops", detail:"~33km, ~375m gain. Easy aerobic - recovery week.", effort:1, targetDistance:33 },
+      { day:"Tue", type:"run", label:"Long Run - 8km", detail:"8km easy. Deliberately tired legs from Monday. Keep it very easy - recovery week.", effort:1, targetDistance:8 },
+      { day:"Wed", type:"rest", label:"Rest", detail:"Full rest. Wednesday buffers the Mon/Tue block.", effort:0 },
+      { day:"Thu", type:"bike", label:"Bike - 1 loop", detail:"~21.7km. Easy spin.", effort:1, targetDistance:21.7 },
+      { day:"Fri", type:"swim", label:"Swim - 700m", detail:"700m continuous. Endurance focus - bilateral breathing, consistent stroke rate.", effort:1, targetDistance:0.7 },
+      { day:"Sat", type:"run", label:"Easy Run - 6km", detail:"6km easy followed by hip stability and core work.", effort:1, targetDistance:6 },
+      { day:"Sun", type:"rest", label:"Rest", detail:"Full rest.", effort:0 },
+    ]},
+    { label:"Week 21", type:"build", tag:"Ph.3 W1", days:[
+      { day:"Mon", type:"bike", label:"Long Bike - 4.5 loops", detail:"~100km, ~1150m gain. Fuel before first climb. Start loop 1 deliberately slow.", effort:3, targetDistance:100 },
+      { day:"Tue", type:"run", label:"Long Run - 18km", detail:"18km. Ironman fatigue simulation off fatigued legs. 10:1 run/walk. Do not chase pace.", effort:2, targetDistance:18 },
+      { day:"Wed", type:"rest", label:"Rest", detail:"Full rest. Non-negotiable at this volume.", effort:0 },
+      { day:"Thu", type:"brick", label:"Brick - 3 loops + 5km run", detail:"~65km bike (3 loops, ~750m gain) then 5km run at tired race pace. Practise T2 transition.", effort:3, targetDistance:70 },
+      { day:"Fri", type:"swim", label:"Swim - 1500m", detail:"1500m. Steady endurance pace.", effort:2, targetDistance:1.5 },
+      { day:"Sat", type:"run", label:"Tempo Run - 8km", detail:"8km with 3-4km at threshold (~6:30/km). Harder sessions - keep them controlled.", effort:3, targetDistance:8 },
+      { day:"Sun", type:"rest", label:"Rest", detail:"Full rest. Monday needs you fresh.", effort:0 },
+    ]},
+    { label:"Week 22", type:"build", tag:"Ph.3 W2", days:[
+      { day:"Mon", type:"bike", label:"Long Bike - 4.5 loops", detail:"~100km, ~1150m gain. Fuel before first climb. Start loop 1 deliberately slow.", effort:3, targetDistance:100 },
+      { day:"Tue", type:"run", label:"Long Run - 19km", detail:"19km. Ironman fatigue simulation off fatigued legs. 10:1 run/walk. Do not chase pace.", effort:2, targetDistance:19 },
+      { day:"Wed", type:"rest", label:"Rest", detail:"Full rest. Non-negotiable at this volume.", effort:0 },
+      { day:"Thu", type:"brick", label:"Brick - 3 loops + 5km run", detail:"~65km bike (3 loops, ~750m gain) then 5km run at tired race pace. Practise T2 transition.", effort:3, targetDistance:70 },
+      { day:"Fri", type:"swim", label:"Swim - 1700m", detail:"1700m. Steady endurance pace.", effort:2, targetDistance:1.7 },
+      { day:"Sat", type:"run", label:"Tempo Run - 8km", detail:"8km with 3-4km at threshold (~6:30/km). Harder sessions - keep them controlled.", effort:3, targetDistance:8 },
+      { day:"Sun", type:"rest", label:"Rest", detail:"Full rest. Monday needs you fresh.", effort:0 },
+    ]},
+    { label:"Week 23", type:"build", tag:"Ph.3 W3", days:[
+      { day:"Mon", type:"bike", label:"Long Bike - 5 loops", detail:"~108km, ~1250m gain. Fuel before first climb. Start loop 1 deliberately slow.", effort:3, targetDistance:108 },
+      { day:"Tue", type:"run", label:"Long Run - 20km", detail:"20km. Ironman fatigue simulation off fatigued legs. 10:1 run/walk. Do not chase pace.", effort:2, targetDistance:20 },
+      { day:"Wed", type:"rest", label:"Rest", detail:"Full rest. Non-negotiable at this volume.", effort:0 },
+      { day:"Thu", type:"brick", label:"Brick - 3 loops + 5km run", detail:"~65km bike (3 loops, ~750m gain) then 5km run at tired race pace. Practise T2 transition.", effort:3, targetDistance:70 },
+      { day:"Fri", type:"swim", label:"Swim - 1900m", detail:"1900m. Steady endurance pace.", effort:2, targetDistance:1.9 },
+      { day:"Sat", type:"run", label:"Tempo Run - 9km", detail:"9km with 3-4km at threshold (~6:30/km). Harder sessions - keep them controlled.", effort:3, targetDistance:9 },
+      { day:"Sun", type:"rest", label:"Rest", detail:"Full rest. Monday needs you fresh.", effort:0 },
+    ]},
+    { label:"Week 24", type:"recovery", tag:"Ph.3 W4", days:[
+      { day:"Mon", type:"bike", label:"Long Bike - 3 loops", detail:"~65km, ~750m gain. Easy recovery ride.", effort:1, targetDistance:65 },
+      { day:"Tue", type:"run", label:"Long Run - 12km", detail:"12km. Easy recovery run, 7:30-8:30/km.", effort:1, targetDistance:12 },
+      { day:"Wed", type:"rest", label:"Rest", detail:"Full rest. Non-negotiable at this volume.", effort:0 },
+      { day:"Thu", type:"bike", label:"Bike - 2 loops easy", detail:"~43km easy spin. Recovery week - let legs flush out.", effort:1, targetDistance:43 },
+      { day:"Fri", type:"swim", label:"Swim - 1200m", detail:"1200m. Steady endurance pace.", effort:1, targetDistance:1.2 },
+      { day:"Sat", type:"run", label:"Easy Run - 6km", detail:"6km easy. Recovery week - keep HR low.", effort:1, targetDistance:6 },
+      { day:"Sun", type:"rest", label:"Rest", detail:"Full rest. Monday needs you fresh.", effort:0 },
+    ]},
+    { label:"Week 25", type:"build", tag:"Ph.3 W5", days:[
+      { day:"Mon", type:"bike", label:"Long Bike - 5 loops", detail:"~108km, ~1250m gain. Fuel before first climb. Start loop 1 deliberately slow.", effort:3, targetDistance:108 },
+      { day:"Tue", type:"run", label:"Long Run - 20km", detail:"20km. Ironman fatigue simulation off fatigued legs. 10:1 run/walk. Do not chase pace.", effort:2, targetDistance:20 },
+      { day:"Wed", type:"rest", label:"Rest", detail:"Full rest. Non-negotiable at this volume.", effort:0 },
+      { day:"Thu", type:"brick", label:"Brick - 3 loops + 5km run", detail:"~65km bike (3 loops, ~750m gain) then 5km run at tired race pace. Practise T2 transition.", effort:3, targetDistance:70 },
+      { day:"Fri", type:"swim", label:"Swim - 2000m", detail:"2000m. Try English Bay or Deep Cove for open water.", effort:2, targetDistance:2.0 },
+      { day:"Sat", type:"run", label:"Tempo Run - 9km", detail:"9km with 3-4km at threshold (~6:30/km). Harder sessions - keep them controlled.", effort:3, targetDistance:9 },
+      { day:"Sun", type:"rest", label:"Rest", detail:"Full rest. Monday needs you fresh.", effort:0 },
+    ]},
+    { label:"Week 26", type:"build", tag:"Ph.3 W6", days:[
+      { day:"Mon", type:"bike", label:"Long Bike - 5 loops", detail:"~108km, ~1250m gain. Fuel before first climb. Start loop 1 deliberately slow.", effort:3, targetDistance:108 },
+      { day:"Tue", type:"run", label:"Long Run - 21km", detail:"21km. Ironman fatigue simulation off fatigued legs. 10:1 run/walk. Do not chase pace.", effort:2, targetDistance:21 },
+      { day:"Wed", type:"rest", label:"Rest", detail:"Full rest. Non-negotiable at this volume.", effort:0 },
+      { day:"Thu", type:"brick", label:"Brick - 3 loops + 5km run", detail:"~65km bike (3 loops, ~750m gain) then 5km run at tired race pace. Practise T2 transition.", effort:3, targetDistance:70 },
+      { day:"Fri", type:"swim", label:"Swim - 2200m", detail:"2200m. Try English Bay or Deep Cove for open water.", effort:2, targetDistance:2.2 },
+      { day:"Sat", type:"run", label:"Tempo Run - 9km", detail:"9km with 3-4km at threshold (~6:30/km). Harder sessions - keep them controlled.", effort:3, targetDistance:9 },
+      { day:"Sun", type:"rest", label:"Rest", detail:"Full rest. Monday needs you fresh.", effort:0 },
+    ]},
+    { label:"Week 27", type:"build", tag:"Ph.3 W7", days:[
+      { day:"Mon", type:"bike", label:"Long Bike - 5.5 loops", detail:"~119km, ~1375m gain. Fuel before first climb. Start loop 1 deliberately slow.", effort:3, targetDistance:119 },
+      { day:"Tue", type:"run", label:"Long Run - 22km", detail:"22km. Ironman fatigue simulation off fatigued legs. 10:1 run/walk. Do not chase pace.", effort:2, targetDistance:22 },
+      { day:"Wed", type:"rest", label:"Rest", detail:"Full rest. Non-negotiable at this volume.", effort:0 },
+      { day:"Thu", type:"brick", label:"Brick - 3 loops + 5km run", detail:"~65km bike (3 loops, ~750m gain) then 5km run at tired race pace. Practise T2 transition.", effort:3, targetDistance:70 },
+      { day:"Fri", type:"swim", label:"Swim - 2300m", detail:"2300m. Try English Bay or Deep Cove for open water.", effort:2, targetDistance:2.3 },
+      { day:"Sat", type:"run", label:"Tempo Run - 10km", detail:"10km with 3-4km at threshold (~6:30/km). Harder sessions - keep them controlled.", effort:3, targetDistance:10 },
+      { day:"Sun", type:"rest", label:"Rest", detail:"Full rest. Monday needs you fresh.", effort:0 },
+    ]},
+    { label:"Week 28", type:"recovery", tag:"Ph.3 W8", days:[
+      { day:"Mon", type:"bike", label:"Long Bike - 3 loops", detail:"~65km, ~750m gain. Easy recovery ride.", effort:1, targetDistance:65 },
+      { day:"Tue", type:"run", label:"Long Run - 12km", detail:"12km. Easy recovery run, 7:30-8:30/km.", effort:1, targetDistance:12 },
+      { day:"Wed", type:"rest", label:"Rest", detail:"Full rest. Non-negotiable at this volume.", effort:0 },
+      { day:"Thu", type:"bike", label:"Bike - 2 loops easy", detail:"~43km easy spin. Recovery week - let legs flush out.", effort:1, targetDistance:43 },
+      { day:"Fri", type:"swim", label:"Swim - 1500m", detail:"1500m. Steady endurance pace.", effort:1, targetDistance:1.5 },
+      { day:"Sat", type:"run", label:"Easy Run - 6km", detail:"6km easy. Recovery week - keep HR low.", effort:1, targetDistance:6 },
+      { day:"Sun", type:"rest", label:"Rest", detail:"Full rest. Monday needs you fresh.", effort:0 },
+    ]},
+    { label:"Week 29", type:"build", tag:"Ph.3 W9", days:[
+      { day:"Mon", type:"bike", label:"Long Bike - 5.5 loops", detail:"~119km, ~1375m gain. Fuel before first climb. Start loop 1 deliberately slow.", effort:3, targetDistance:119 },
+      { day:"Tue", type:"run", label:"Long Run - 22km", detail:"22km. Ironman fatigue simulation off fatigued legs. 10:1 run/walk. Do not chase pace.", effort:2, targetDistance:22 },
+      { day:"Wed", type:"rest", label:"Rest", detail:"Full rest. Non-negotiable at this volume.", effort:0 },
+      { day:"Thu", type:"brick", label:"Brick - 3 loops + 5km run", detail:"~65km bike (3 loops, ~750m gain) then 5km run at tired race pace. Practise T2 transition.", effort:3, targetDistance:70 },
+      { day:"Fri", type:"swim", label:"Swim - 2400m", detail:"2400m. Try English Bay or Deep Cove for open water.", effort:2, targetDistance:2.4 },
+      { day:"Sat", type:"run", label:"Tempo Run - 10km", detail:"10km with 3-4km at threshold (~6:30/km). Harder sessions - keep them controlled.", effort:3, targetDistance:10 },
+      { day:"Sun", type:"rest", label:"Rest", detail:"Full rest. Monday needs you fresh.", effort:0 },
+    ]},
+    { label:"Week 30", type:"build", tag:"Ph.3 W10", days:[
+      { day:"Mon", type:"bike", label:"Long Bike - 6 loops", detail:"~130km, ~1500m gain. Fuel before first climb. Start loop 1 deliberately slow.", effort:3, targetDistance:130 },
+      { day:"Tue", type:"run", label:"Long Run - 22km", detail:"22km. Ironman fatigue simulation off fatigued legs. 10:1 run/walk. Do not chase pace.", effort:2, targetDistance:22 },
+      { day:"Wed", type:"rest", label:"Rest", detail:"Full rest. Non-negotiable at this volume.", effort:0 },
+      { day:"Thu", type:"brick", label:"Brick - 3 loops + 5km run", detail:"~65km bike (3 loops, ~750m gain) then 5km run at tired race pace. Practise T2 transition.", effort:3, targetDistance:70 },
+      { day:"Fri", type:"swim", label:"Swim - 2500m", detail:"2500m. Try English Bay or Deep Cove for open water.", effort:2, targetDistance:2.5 },
+      { day:"Sat", type:"run", label:"Tempo Run - 10km", detail:"10km with 3-4km at threshold (~6:30/km). Harder sessions - keep them controlled.", effort:3, targetDistance:10 },
+      { day:"Sun", type:"rest", label:"Rest", detail:"Full rest. Monday needs you fresh.", effort:0 },
+    ]},
+    { label:"Week 31", type:"build", tag:"Ph.3 W11", days:[
+      { day:"Mon", type:"bike", label:"Long Bike - 6 loops", detail:"~130km, ~1500m gain. Fuel before first climb. Start loop 1 deliberately slow.", effort:3, targetDistance:130 },
+      { day:"Tue", type:"run", label:"Long Run - 22km", detail:"22km. Ironman fatigue simulation off fatigued legs. 10:1 run/walk. Do not chase pace.", effort:2, targetDistance:22 },
+      { day:"Wed", type:"rest", label:"Rest", detail:"Full rest. Non-negotiable at this volume.", effort:0 },
+      { day:"Thu", type:"brick", label:"Brick - 3 loops + 5km run", detail:"~65km bike (3 loops, ~750m gain) then 5km run at tired race pace. Practise T2 transition.", effort:3, targetDistance:70 },
+      { day:"Fri", type:"swim", label:"Swim - 2500m", detail:"2500m. Try English Bay or Deep Cove for open water.", effort:2, targetDistance:2.5 },
+      { day:"Sat", type:"run", label:"Tempo Run - 10km", detail:"10km with 3-4km at threshold (~6:30/km). Harder sessions - keep them controlled.", effort:3, targetDistance:10 },
+      { day:"Sun", type:"rest", label:"Rest", detail:"Full rest. Monday needs you fresh.", effort:0 },
+    ]},
+    { label:"Week 32", type:"recovery", tag:"Ph.3 W12", days:[
+      { day:"Mon", type:"bike", label:"Long Bike - 3 loops", detail:"~65km, ~750m gain. Easy recovery ride.", effort:1, targetDistance:65 },
+      { day:"Tue", type:"run", label:"Long Run - 12km", detail:"12km. Easy recovery run, 7:30-8:30/km.", effort:1, targetDistance:12 },
+      { day:"Wed", type:"rest", label:"Rest", detail:"Full rest. Non-negotiable at this volume.", effort:0 },
+      { day:"Thu", type:"bike", label:"Bike - 2 loops easy", detail:"~43km easy spin. Recovery week - let legs flush out.", effort:1, targetDistance:43 },
+      { day:"Fri", type:"swim", label:"Swim - 1500m", detail:"1500m. Steady endurance pace.", effort:1, targetDistance:1.5 },
+      { day:"Sat", type:"run", label:"Easy Run - 6km", detail:"6km easy. Recovery week - keep HR low.", effort:1, targetDistance:6 },
+      { day:"Sun", type:"rest", label:"Rest", detail:"Full rest. Monday needs you fresh.", effort:0 },
+    ]},
+    { label:"Week 33", type:"build", tag:"Ph.4 W1", days:[
+      { day:"Mon", type:"bike", label:"Long Bike - 7 loops", detail:"~150km, ~1750m gain. Start loop 1 deliberately slow. Eat and drink every 30 min.", effort:3, targetDistance:150 },
+      { day:"Tue", type:"run", label:"Race-Pace Run - 12km", detail:"12km at target Ironman marathon pace (~7:00-7:30/km). Heavy legs from Monday. This is what km 30 of the Ironman feels like.", effort:3, targetDistance:12 },
+      { day:"Wed", type:"rest", label:"Rest", detail:"Full rest. Non-negotiable.", effort:0 },
+      { day:"Thu", type:"brick", label:"Simulation - 120km bike + 20km run", detail:"~5.5 loops (120km) then 20km run. Rehearse race-day nutrition.", effort:4, targetDistance:140 },
+      { day:"Fri", type:"swim", label:"Swim - 3000m", detail:"3000m steady. Building toward 3.8km.", effort:3, targetDistance:3.0 },
+      { day:"Sat", type:"run", label:"Shakeout - 5km", detail:"Very easy 5km. Legs loose. Swap for a walk if simulation fatigue is high.", effort:1, targetDistance:5 },
+      { day:"Sun", type:"rest", label:"Rest", detail:"Full rest. Sleep. Eat well.", effort:0 },
+    ]},
+    { label:"Week 34", type:"build", tag:"Ph.4 W2", days:[
+      { day:"Mon", type:"bike", label:"Long Bike - 7 loops", detail:"~150km, ~1750m gain. Start loop 1 deliberately slow. Eat and drink every 30 min.", effort:3, targetDistance:150 },
+      { day:"Tue", type:"run", label:"Race-Pace Run - 13km", detail:"13km at target Ironman marathon pace (~7:00-7:30/km). Heavy legs from Monday. This is what km 30 of the Ironman feels like.", effort:3, targetDistance:13 },
+      { day:"Wed", type:"rest", label:"Rest", detail:"Full rest. Non-negotiable.", effort:0 },
+      { day:"Thu", type:"brick", label:"Simulation - 120km bike + 20km run", detail:"~5.5 loops (120km) then 20km run. Rehearse race-day nutrition.", effort:4, targetDistance:140 },
+      { day:"Fri", type:"swim", label:"Swim - 3200m", detail:"3200m steady. Building toward 3.8km.", effort:3, targetDistance:3.2 },
+      { day:"Sat", type:"run", label:"Shakeout - 5km", detail:"Very easy 5km. Legs loose. Swap for a walk if simulation fatigue is high.", effort:1, targetDistance:5 },
+      { day:"Sun", type:"rest", label:"Rest", detail:"Full rest. Sleep. Eat well.", effort:0 },
+    ]},
+    { label:"Week 35", type:"build", tag:"Ph.4 W3", days:[
+      { day:"Mon", type:"bike", label:"Long Bike - 7 loops", detail:"~150km, ~1750m gain. Start loop 1 deliberately slow. Eat and drink every 30 min.", effort:3, targetDistance:150 },
+      { day:"Tue", type:"run", label:"Race-Pace Run - 14km", detail:"14km at target Ironman marathon pace (~7:00-7:30/km). Heavy legs from Monday. This is what km 30 of the Ironman feels like.", effort:3, targetDistance:14 },
+      { day:"Wed", type:"rest", label:"Rest", detail:"Full rest. Non-negotiable.", effort:0 },
+      { day:"Thu", type:"brick", label:"Simulation - 120km bike + 20km run", detail:"~5.5 loops (120km) then 20km run. Rehearse race-day nutrition.", effort:4, targetDistance:140 },
+      { day:"Fri", type:"swim", label:"Swim - 3500m", detail:"3500m steady. Building toward 3.8km.", effort:3, targetDistance:3.5 },
+      { day:"Sat", type:"run", label:"Shakeout - 5km", detail:"Very easy 5km. Legs loose. Swap for a walk if simulation fatigue is high.", effort:1, targetDistance:5 },
+      { day:"Sun", type:"rest", label:"Rest", detail:"Full rest. Sleep. Eat well.", effort:0 },
+    ]},
+    { label:"Week 36", type:"recovery", tag:"Ph.4 W4", days:[
+      { day:"Mon", type:"bike", label:"Long Bike - 4 loops", detail:"~87km, ~1000m gain. Easy recovery ride.", effort:1, targetDistance:87 },
+      { day:"Tue", type:"run", label:"Race-Pace Run - 9km", detail:"9km at target Ironman marathon pace (~7:00-7:30/km). Heavy legs from Monday. This is what km 30 of the Ironman feels like.", effort:1, targetDistance:9 },
+      { day:"Wed", type:"rest", label:"Rest", detail:"Full rest. Non-negotiable.", effort:0 },
+      { day:"Thu", type:"bike", label:"Bike - 2 loops easy", detail:"~43km easy. Recovery week.", effort:1, targetDistance:43 },
+      { day:"Fri", type:"swim", label:"Swim - 2000m", detail:"2000m steady. Building toward 3.8km.", effort:1, targetDistance:2.0 },
+      { day:"Sat", type:"run", label:"Shakeout - 5km", detail:"Very easy 5km. Legs loose. Easy recovery run.", effort:1, targetDistance:5 },
+      { day:"Sun", type:"rest", label:"Rest", detail:"Full rest. Sleep. Eat well.", effort:0 },
+    ]},
+    { label:"Week 37", type:"build", tag:"Ph.4 W5", days:[
+      { day:"Mon", type:"bike", label:"Long Bike - 7.5 loops", detail:"~160km, ~1840m gain. Start loop 1 deliberately slow. Eat and drink every 30 min.", effort:3, targetDistance:160 },
+      { day:"Tue", type:"run", label:"Race-Pace Run - 14km", detail:"14km at target Ironman marathon pace (~7:00-7:30/km). Heavy legs from Monday. This is what km 30 of the Ironman feels like.", effort:3, targetDistance:14 },
+      { day:"Wed", type:"rest", label:"Rest", detail:"Full rest. Non-negotiable.", effort:0 },
+      { day:"Thu", type:"brick", label:"Simulation - 130km bike + 22km run", detail:"~6.0 loops (130km) then 22km run. Rehearse race-day nutrition.", effort:4, targetDistance:152 },
+      { day:"Fri", type:"swim", label:"Swim - 3600m", detail:"3600m steady. Building toward 3.8km.", effort:3, targetDistance:3.6 },
+      { day:"Sat", type:"run", label:"Shakeout - 5km", detail:"Very easy 5km. Legs loose. Swap for a walk if simulation fatigue is high.", effort:1, targetDistance:5 },
+      { day:"Sun", type:"rest", label:"Rest", detail:"Full rest. Sleep. Eat well.", effort:0 },
+    ]},
+    { label:"Week 38", type:"build", tag:"Ph.4 W6", days:[
+      { day:"Mon", type:"bike", label:"Long Bike - 7.5 loops", detail:"~160km, ~1840m gain. Start loop 1 deliberately slow. Eat and drink every 30 min.", effort:3, targetDistance:160 },
+      { day:"Tue", type:"run", label:"Race-Pace Run - 15km", detail:"15km at target Ironman marathon pace (~7:00-7:30/km). Heavy legs from Monday. This is what km 30 of the Ironman feels like.", effort:3, targetDistance:15 },
+      { day:"Wed", type:"rest", label:"Rest", detail:"Full rest. Non-negotiable.", effort:0 },
+      { day:"Thu", type:"brick", label:"Simulation - 140km bike + 25km run", detail:"~6.5 loops (140km) then 25km run. Rehearse race-day nutrition.", effort:4, targetDistance:165 },
+      { day:"Fri", type:"swim", label:"Swim - 3.8km", detail:"3.8km swim - slow, steady, bilateral breathing. Just finish it. A milestone.", effort:3, targetDistance:3.8 },
+      { day:"Sat", type:"run", label:"Shakeout - 5km", detail:"Very easy 5km. Legs loose. Swap for a walk if simulation fatigue is high.", effort:1, targetDistance:5 },
+      { day:"Sun", type:"rest", label:"Rest", detail:"Full rest. Sleep. Eat well.", effort:0 },
+    ]},
+    { label:"Week 39", type:"build", tag:"Ph.4 W7", days:[
+      { day:"Mon", type:"bike", label:"Long Bike - 7.5 loops", detail:"~160km, ~1840m gain. Start loop 1 deliberately slow. Eat and drink every 30 min.", effort:3, targetDistance:160 },
+      { day:"Tue", type:"run", label:"Race-Pace Run - 15km", detail:"15km at target Ironman marathon pace (~7:00-7:30/km). Heavy legs from Monday. This is what km 30 of the Ironman feels like.", effort:3, targetDistance:15 },
+      { day:"Wed", type:"rest", label:"Rest", detail:"Full rest. Non-negotiable.", effort:0 },
+      { day:"Thu", type:"brick", label:"Simulation - 140km bike + 25km run", detail:"~6.5 loops (140km) then 25km run. Rehearse race-day nutrition.", effort:4, targetDistance:165 },
+      { day:"Fri", type:"swim", label:"Swim - 3.8km", detail:"3.8km swim - slow, steady, bilateral breathing. Just finish it. A milestone.", effort:3, targetDistance:3.8 },
+      { day:"Sat", type:"run", label:"Shakeout - 5km", detail:"Very easy 5km. Legs loose. Swap for a walk if simulation fatigue is high.", effort:1, targetDistance:5 },
+      { day:"Sun", type:"rest", label:"Rest", detail:"Full rest. Sleep. Eat well.", effort:0 },
+    ]},
+    { label:"Week 40", type:"recovery", tag:"Ph.4 W8", days:[
+      { day:"Mon", type:"bike", label:"Long Bike - 4 loops", detail:"~87km, ~1000m gain. Easy recovery ride.", effort:1, targetDistance:87 },
+      { day:"Tue", type:"run", label:"Race-Pace Run - 9km", detail:"9km at target Ironman marathon pace (~7:00-7:30/km). Heavy legs from Monday. This is what km 30 of the Ironman feels like.", effort:1, targetDistance:9 },
+      { day:"Wed", type:"rest", label:"Rest", detail:"Full rest. Non-negotiable.", effort:0 },
+      { day:"Thu", type:"bike", label:"Bike - 2 loops easy", detail:"~43km easy. Recovery week.", effort:1, targetDistance:43 },
+      { day:"Fri", type:"swim", label:"Swim - 2000m", detail:"2000m steady. Building toward 3.8km.", effort:1, targetDistance:2.0 },
+      { day:"Sat", type:"run", label:"Shakeout - 5km", detail:"Very easy 5km. Legs loose. Easy recovery run.", effort:1, targetDistance:5 },
+      { day:"Sun", type:"rest", label:"Rest", detail:"Full rest. Sleep. Eat well.", effort:0 },
+    ]},
+    { label:"Week 41", type:"recovery", tag:"Ph.5 Taper W1", days:[
+      { day:"Mon", type:"bike", label:"Bike - 2.0 loops easy", detail:"~43km easy. No chasing times.", effort:1, targetDistance:43 },
+      { day:"Tue", type:"run", label:"Short Run - 6km", detail:"6km easy with 2x1km at race pace.", effort:2, targetDistance:6 },
+      { day:"Wed", type:"rest", label:"Rest", detail:"Full rest.", effort:0 },
+      { day:"Thu", type:"bike", label:"Bike - 1 loop", detail:"21.7km easy.", effort:1, targetDistance:21.7 },
+      { day:"Fri", type:"swim", label:"Swim - 1500m", detail:"1500m easy. Feel your stroke. Relax.", effort:1, targetDistance:1.5 },
+      { day:"Sat", type:"run", label:"Shakeout - 20 min", detail:"Very easy shakeout. Legs loose.", effort:1 },
+      { day:"Sun", type:"rest", label:"Rest", detail:"Walk, eat well, sleep 9hrs. Trust your preparation.", effort:0 },
+    ]},
+    { label:"Week 42", type:"recovery", tag:"Ph.5 Taper W2", days:[
+      { day:"Mon", type:"bike", label:"Bike - 1.5 loops easy", detail:"~33km easy. No chasing times.", effort:1, targetDistance:33 },
+      { day:"Tue", type:"run", label:"Short Run - 5km", detail:"5km easy with 2x1km at race pace.", effort:2, targetDistance:5 },
+      { day:"Wed", type:"rest", label:"Rest", detail:"Full rest.", effort:0 },
+      { day:"Thu", type:"bike", label:"Bike - 1 loop", detail:"21.7km easy.", effort:1, targetDistance:21.7 },
+      { day:"Fri", type:"swim", label:"Swim - 1200m", detail:"1200m easy. Feel your stroke. Relax.", effort:1, targetDistance:1.2 },
+      { day:"Sat", type:"run", label:"Shakeout - 15 min", detail:"Very easy shakeout. Legs loose.", effort:1 },
+      { day:"Sun", type:"rest", label:"Rest", detail:"Walk, eat well, sleep 9hrs. Trust your preparation.", effort:0 },
+    ]},
+    { label:"Week 43", type:"recovery", tag:"Ph.5 Taper W3", days:[
+      { day:"Mon", type:"bike", label:"Bike - 1.0 loops easy", detail:"~21.7km easy. No chasing times.", effort:1, targetDistance:21.7 },
+      { day:"Tue", type:"run", label:"Short Run - 4km", detail:"4km easy with 2x1km at race pace.", effort:2, targetDistance:4 },
+      { day:"Wed", type:"rest", label:"Rest", detail:"Full rest.", effort:0 },
+      { day:"Thu", type:"bike", label:"Bike - 1 loop", detail:"21.7km easy.", effort:1, targetDistance:21.7 },
+      { day:"Fri", type:"swim", label:"Swim - 800m", detail:"800m easy. Feel your stroke. Relax.", effort:1, targetDistance:0.8 },
+      { day:"Sat", type:"run", label:"Shakeout - 10 min", detail:"Very easy shakeout. Legs loose.", effort:1 },
+      { day:"Sun", type:"rest", label:"Rest", detail:"Walk, eat well, sleep 9hrs. Trust your preparation.", effort:0 },
+    ]},
+    { label:"Week 44", type:"recovery", tag:"Ph.5 Taper W4", days:[
+      { day:"Mon", type:"rest", label:"Rest - Race Prep", detail:"Full rest. Final gear check. Visualise race day.", effort:0 },
+      { day:"Tue", type:"run", label:"Short Run - 3km", detail:"3km easy.", effort:1, targetDistance:3 },
+      { day:"Wed", type:"rest", label:"Rest", detail:"Full rest.", effort:0 },
+      { day:"Thu", type:"rest", label:"Rest", detail:"Full rest.", effort:0 },
+      { day:"Fri", type:"swim", label:"Swim - 400m", detail:"400m easy. Feel your stroke. Relax.", effort:1, targetDistance:0.4 },
+      { day:"Sat", type:"rest", label:"Rest", detail:"Walk, eat well, sleep 9hrs.", effort:0 },
+      { day:"Sun", type:"rest", label:"Rest", detail:"Walk, eat well, sleep 9hrs. Trust your preparation.", effort:0 },
+    ]}
+  ]
+};
+
+const TYPE = {
+  run:   { color:"#a78bfa", bg:"#1e1040", icon:"🏃", label:"RUN" },
+  bike:  { color:"#c4b5fd", bg:"#180f2e", icon:"🚴", label:"RIDE" },
+  swim:  { color:"#818cf8", bg:"#1a1040", icon:"🏊", label:"SWIM" },
+  brick: { color:"#e879f9", bg:"#2d0a3a", icon:"⚡", label:"BRICK" },
+  rest:  { color:"#4a3878", bg:"#130c24", icon:"💤", label:"REST" },
+};
+const FEELINGS = ["😴 Tough","😐 OK","🙂 Good","😄 Great","🔥 Crushed it"];
+const DAYS = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+
+// --- Storage (multi-cycle) ---
+// Keys: "C{cycleNum}-{wi}-{di}" e.g. "C0-2-4"
+// Migrates legacy "wi-di" keys to "C0-wi-di" on first load
+
+// --- Supabase config ---
+const SUPA_URL = "https://sfnslkdwaldinhaismgz.supabase.co";
+const SUPA_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNmbnNsa2R3YWxkaW5oYWlzbWd6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzMTQwNzMsImV4cCI6MjA5Njg5MDA3M30.r9o-9_3VqhH846AxOW4mQ9thttwUG3XP74KArPHzzaA";
+const SUPA_HEADERS = { "Content-Type": "application/json", "apikey": SUPA_KEY, "Authorization": `Bearer ${SUPA_KEY}` };
+
+function getUserPin() { return localStorage.getItem("app_pin") || ""; }
+
+// Local cache — keeps UI instant, Supabase is source of truth
+function getLogs() { try { return JSON.parse(localStorage.getItem("dt_logs")||"{}"); } catch { return {}; } }
+function saveLogsLocal(l) { localStorage.setItem("dt_logs", JSON.stringify(l)); }
+function logKey(cn, wi, di) { return `C${cn}-${wi}-${di}`; }
+function getLog(wi, di) { const cn = getCurrentCycle(); return getLogs()[logKey(cn, wi, di)] || null; }
+
+// Write to local cache immediately, then sync to Supabase in background
+function setLog(wi, di, data) {
+  const key = logKey(getCurrentCycle(), wi, di);
+  const l = getLogs();
+  l[key] = {...data, cycleNum: getCurrentCycle()};
+  saveLogsLocal(l);
+  supaUpsert(getCurrentCycle(), wi, di, l[key]);
+}
+
+function removeLogEntry(wi, di) {
+  const key = logKey(getCurrentCycle(), wi, di);
+  const l = getLogs();
+  delete l[key];
+  saveLogsLocal(l);
+  supaDelete(getCurrentCycle(), wi, di);
+}
+
+// Supabase operations
+async function supaUpsert(cn, wi, di, data) {
+  const pin = getUserPin(); if (!pin) return;
+  try {
+    await fetch(`${SUPA_URL}/rest/v1/logs`, {
+      method: "POST",
+      headers: { ...SUPA_HEADERS, "Prefer": "resolution=merge-duplicates" },
+      body: JSON.stringify({
+        key: logKey(cn, wi, di),
+        cycle_num: cn, week_index: wi, day_index: di,
+        user_pin: pin,
+        completed: data.completed || false,
+        activity_type: data.activityType || null,
+        feeling: data.feeling ?? null,
+        distance: parseFloat(data.distance) || null,
+        bike_distance: parseFloat(data.bikeDistance) || null,
+        run_distance: parseFloat(data.runDistance) || null,
+        duration: parseFloat(data.duration) || null,
+        notes: data.notes || null,
+        completed_at: data.completedAt || null,
+      })
+    });
+  } catch(e) { console.warn("Supabase sync failed:", e); }
+}
+
+async function supaDelete(cn, wi, di) {
+  const pin = getUserPin(); if (!pin) return;
+  try {
+    await fetch(`${SUPA_URL}/rest/v1/logs?key=eq.${logKey(cn,wi,di)}&user_pin=eq.${pin}`, {
+      method: "DELETE", headers: SUPA_HEADERS
+    });
+  } catch(e) { console.warn("Supabase delete failed:", e); }
+}
+
+// Pull all logs from Supabase and update local cache
+async function supaSync() {
+  const pin = getUserPin(); if (!pin) return;
+  try {
+    showSyncStatus("syncing");
+    const res = await fetch(`${SUPA_URL}/rest/v1/logs?user_pin=eq.${pin}&select=*`, {
+      headers: SUPA_HEADERS
+    });
+    if (!res.ok) throw new Error(res.status);
+    const rows = await res.json();
+    const merged = {};
+    rows.forEach(r => {
+      merged[r.key] = {
+        completed: r.completed,
+        activityType: r.activity_type,
+        feeling: r.feeling,
+        distance: r.distance != null ? String(r.distance) : "",
+        bikeDistance: r.bike_distance != null ? String(r.bike_distance) : "",
+        runDistance: r.run_distance != null ? String(r.run_distance) : "",
+        duration: r.duration != null ? String(r.duration) : "",
+        notes: r.notes || "",
+        completedAt: r.completed_at,
+        cycleNum: r.cycle_num,
+      };
+    });
+    saveLogsLocal(merged);
+    showSyncStatus("ok");
+    renderToday();
+    if (document.getElementById("history-screen").classList.contains("active")) renderHistory();
+    if (document.getElementById("plan-screen").classList.contains("active")) renderPlan(activePlanWeek);
+  } catch(e) {
+    console.warn("Supabase pull failed:", e);
+    showSyncStatus("error");
+  }
+}
+
+function showSyncStatus(state) {
+  const el = document.getElementById("sync-status");
+  if (!el) return;
+  if (state === "syncing") { el.textContent = "⟳ Syncing..."; el.style.color = "var(--faint)"; }
+  else if (state === "ok") { el.textContent = "✓ Synced"; el.style.color = "var(--accent-bright)"; setTimeout(()=>{ el.textContent=""; }, 3000); }
+  else { el.textContent = "⚠ Sync failed"; el.style.color = "#f59e0b"; }
+}
+
+function getCycleStart() {
+  const s=localStorage.getItem("dt_cycle"); if(s) return new Date(s);
+  const today=new Date(), day=today.getDay();
+  const mon=new Date(today); mon.setDate(today.getDate()-day+(day===0?-6:1)); mon.setHours(0,0,0,0);
+  localStorage.setItem("dt_cycle",mon.toISOString()); return mon;
+}
+function getCurrentWeek() {
+  const diff=Math.floor((new Date()-getCycleStart())/86400000);
+  return Math.min(Math.floor(diff/7), PLAN.weeks.length-1);
+}
+function getCurrentCycle() { return 0; }
+
+
+// Returns the real calendar date (YYYY-MM-DD) for a given plan week + day index
+function getPlanDate(wi, di) {
+  const cycleStart = getCycleStart(); // Monday of week 1
+  const d = new Date(cycleStart);
+  d.setDate(d.getDate() + wi * 7 + di); // di=0→Mon, di=1→Tue, … di=6→Sun
+  return d.toISOString().slice(0, 10);
+}
+
+
+
+
+function dotsHtml(effort) {
+  let h=""; for(let i=1;i<=4;i++) h+=`<span class="dot${i<=effort?" on":""}"></span>`; return h;
+}
+
+// --- Tab ---
+function showTab(name, el) {
+  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+  document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+  document.getElementById(name+"-screen").classList.add("active");
+  el.classList.add("active");
+  if(name==="today") renderToday();
+  if(name==="plan") renderPlan(activePlanWeek);
+  if(name==="history") renderHistory();
+  if(name==="history") setTimeout(renderChart, 100);
+  if(name==="fuel") fuelCalc();
+  if(name==="settings") initSettingsScreen();
+}
+
+// --- TODAY ---
+function renderToday() {
+  const today=new Date(), todayName=DAYS[today.getDay()];
+  const wi=getCurrentWeek(), week=PLAN.weeks[wi];
+  document.getElementById("today-date").textContent=today.toLocaleDateString("en-GB",{weekday:"short",day:"numeric",month:"short",year:"numeric"}).toUpperCase();
+  document.getElementById("today-week-badge").textContent=`W${wi+1} of 44 · ${week.tag}`;
+
+  const di=week.days.findIndex(d=>d.day===todayName);
+  const session=di>=0?week.days[di]:null;
+  const cfg=session?TYPE[session.type]:TYPE.rest;
+  const log=session?getLog(wi,di):null;
+
+  let cardHtml=`<div class="today-label">TODAY</div>`;
+  if(session && session.type!=="rest") {
+    const effortLabels=["","Easy","Moderate","Hard","Peak"];
+    // Use logged type if it differs from planned
+    const loggedType = log?.activityType || session.type;
+    const displayCfg = TYPE[loggedType] || cfg;
+    const typeChanged = log?.completed && loggedType !== session.type;
+    cardHtml+=`<div class="today-row"><span class="today-icon">${displayCfg.icon}</span>
+      <div><div class="today-title" style="color:${displayCfg.color}">${typeChanged ? displayCfg.label : session.label}</div>
+      ${typeChanged ? `<div style="font-size:10px;color:var(--faint);margin-top:1px">planned: ${session.label}</div>` : ""}
+      <div class="today-detail">${session.detail}</div></div></div>
+      <div class="effort-row">${dotsHtml(session.effort)}<span class="effort-label">${effortLabels[session.effort]} effort</span></div>`;
+    if(log?.completed) {
+      cardHtml+=`<div class="done-tag" style="border-color:${displayCfg.color};color:${displayCfg.color}">✓ Completed</div>`;
+    } else {
+      cardHtml+=`<button class="btn" style="background:var(--accent);color:#fff" onclick="openLog(${wi},${di})">Log Workout</button>`;
+    }
+    const tc=document.getElementById("today-card");
+    tc.innerHTML=cardHtml; tc.style.backgroundColor=displayCfg.bg; tc.style.borderColor=displayCfg.color;
+  } else {
+    cardHtml+=`<div style="display:flex;align-items:center;gap:12px"><span style="font-size:28px">💤</span><span style="color:var(--faint);font-size:16px;font-weight:600">Rest day — recover well</span></div>`;
+    const tc=document.getElementById("today-card");
+    tc.innerHTML=cardHtml; tc.style.backgroundColor=cfg.bg; tc.style.borderColor=cfg.color;
+  }
+
+  // Progress
+  let completed=0;
+  week.days.forEach((d,i)=>{ if(d.type!=="rest"&&getLog(wi,i)?.completed) completed++; });
+  const total=week.days.filter(d=>d.type!=="rest").length;
+  document.getElementById("progress-fill").style.width=total>0?`${(completed/total)*100}%`:"0%";
+  document.getElementById("progress-text").textContent=`${completed} of ${total} sessions done`;
+
+  // Pills — calculate real calendar date for each day of this week
+  const weekStart = getCycleStart();
+  weekStart.setDate(weekStart.getDate() + wi * 7); // Monday of this plan week
+  let pillsHtml="";
+  week.days.forEach((d,i)=>{
+    const c=TYPE[d.type],l=getLog(wi,i),isToday=d.day===todayName;
+    const loggedType=l?.activityType||d.type;
+    const dc=TYPE[loggedType]||c;
+    const dayDate = new Date(weekStart);
+    dayDate.setDate(weekStart.getDate() + i);
+    const dateNum = dayDate.getDate();
+    const dateMonth = dayDate.toLocaleDateString("en-GB",{month:"short"});
+    pillsHtml+=`<div class="day-pill" style="border-color:${isToday?dc.color:"var(--border)"};background:${l?.completed?dc.color+"33":"var(--card)"}" ${d.type!=="rest"?`onclick="openLog(${wi},${i})"`:""}>
+      <div class="day-pill-day" style="color:${isToday?dc.color:"var(--faint)"}">${d.day}</div>
+      <div class="day-pill-icon">${dc.icon}</div>
+      <div style="font-size:9px;color:${isToday?dc.color:"var(--faint)"};font-weight:600;margin-top:1px">${dateNum} ${dateMonth}</div>
+      ${l?.completed?'<div class="day-pill-check">✓</div>':""}
+    </div>`;
+  });
+  document.getElementById("week-days").innerHTML=pillsHtml;
+
+  // Upcoming
+  const dayOrder=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+  const todayIdx=dayOrder.indexOf(todayName);
+  const upcoming=week.days.map((d,i)=>({...d,di:i})).filter(d=>dayOrder.indexOf(d.day)>todayIdx&&d.type!=="rest").slice(0,3);
+  let upHtml="";
+  if(upcoming.length) {
+    upHtml=`<div class="section-title">Coming Up</div>`;
+    upcoming.forEach(d=>{
+      const c=TYPE[d.type];
+      upHtml+=`<div class="upcoming-card" onclick="openLog(${wi},${d.di})">
+        <span style="font-size:22px">${c.icon}</span>
+        <div><div style="font-size:11px;color:var(--dim);font-weight:600">${d.day}</div><div style="font-size:14px;color:var(--text);font-weight:700">${d.label}</div></div>
+        <span class="badge" style="color:${c.color};border-color:${c.color}55;background:${c.color}22">${c.label}</span>
+      </div>`;
+    });
+  }
+  document.getElementById("upcoming-section").innerHTML=upHtml;
+}
+
+function toggleDay(i,wi) {
+  if(expandedDay===i) {
+    document.getElementById(`exp-${i}`).classList.remove("open");
+    document.getElementById(`chev-${i}`).textContent="▼";
+    document.getElementById(`day-card-${i}`).style.borderColor=TYPE[PLAN.weeks[wi].days[i].type].color+"44";
+    expandedDay=null;
+  } else {
+    if(expandedDay!==null) {
+      document.getElementById(`exp-${expandedDay}`)?.classList.remove("open");
+      document.getElementById(`chev-${expandedDay}`).textContent="▼";
+      document.getElementById(`day-card-${expandedDay}`).style.borderColor=TYPE[PLAN.weeks[wi].days[expandedDay].type].color+"44";
+    }
+    document.getElementById(`exp-${i}`).classList.add("open");
+    document.getElementById(`chev-${i}`).textContent="▲";
+    document.getElementById(`day-card-${i}`).style.borderColor=TYPE[PLAN.weeks[wi].days[i].type].color;
+    expandedDay=i;
+  }
+}
+
+// --- LOG ---
+// --- PLAN ---
+let activePlanWeek=0, expandedDay=null;
+// Phase definitions — maps phase name to week index range
+const PHASES_DEF = [
+  { id:1, label:"Rehab",  weeks:[0,7]  },
+  { id:2, label:"Base",   weeks:[8,19] },
+  { id:3, label:"Build",  weeks:[20,31]},
+  { id:4, label:"Peak",   weeks:[32,39]},
+  { id:5, label:"Taper",  weeks:[40,43]},
+];
+
+function getPhaseForWeek(wi) {
+  return PHASES_DEF.findIndex(p => wi >= p.weeks[0] && wi <= p.weeks[1]);
+}
+
+let activePhaseDef = 0;
+
+function renderPhaseTabs(activePhase) {
+  activePhaseDef = activePhase;
+  const cw = getCurrentWeek();
+  document.getElementById("phase-tabs").innerHTML = PHASES_DEF.map((p, i) => {
+    const isActive = i === activePhase;
+    const weekCount = p.weeks[1] - p.weeks[0] + 1;
+    return `<button class="phase-tab${isActive?" active":""}" onclick="selectPhase(${i})">
+      <span class="phase-tab-num">Ph.${p.id} · ${weekCount}w</span>
+      <span class="phase-tab-label">${p.label}</span>
+    </button>`;
+  }).join("");
+}
+
+function selectPhase(pi) {
+  const cw = getCurrentWeek();
+  const phase = PHASES_DEF[pi];
+  // Jump to current week if in this phase, otherwise first week
+  const targetWi = (cw >= phase.weeks[0] && cw <= phase.weeks[1]) ? cw : phase.weeks[0];
+  renderPlan(targetWi);
+}
+
+function renderWeekGrid(wi) {
+  const cw = getCurrentWeek();
+  const phase = PHASES_DEF[activePhaseDef];
+  const weeksInPhase = PLAN.weeks.slice(phase.weeks[0], phase.weeks[1]+1);
+  const cols = Math.min(weeksInPhase.length, 8);
+  document.getElementById("week-grid").innerHTML = `<div class="week-grid-inner" style="grid-template-columns:repeat(${cols},1fr)">
+    ${weeksInPhase.map((w, idx) => {
+      const globalWi = phase.weeks[0] + idx;
+      const isActive = globalWi === wi;
+      const isCurrent = globalWi === cw;
+      const log = PLAN.weeks[globalWi].days.filter(d=>d.type!=="rest").every((d,di)=>getLog(globalWi, PLAN.weeks[globalWi].days.indexOf(d))?.completed);
+      return `<button class="week-cell ${w.type}${isActive?" active":""}${isCurrent&&!isActive?" current-week":""}" onclick="renderPlan(${globalWi})">
+        <span class="week-cell-num">W${globalWi+1}</span>
+        <span class="week-cell-dot"></span>
+      </button>`;
+    }).join("")}
+  </div>`;
+}
+
+function renderPlan(wi) {
+  activePlanWeek=wi; expandedDay=null;
+  const phaseIdx = getPhaseForWeek(wi);
+  renderPhaseTabs(phaseIdx);
+  renderWeekGrid(wi);
+
+  const week=PLAN.weeks[wi];
+  const isRec = week.type==="recovery";
+  const wColor = isRec ? "#5b21b6" : "var(--accent)";
+  const wTextColor = isRec ? "var(--accent-light)" : "#fff";
+
+  document.getElementById("week-header").innerHTML=`
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <div>
+        <div style="font-size:18px;font-weight:900;color:var(--text);letter-spacing:-0.02em">${week.label}</div>
+        <div style="font-size:11px;color:var(--faint);margin-top:1px">${PHASES_DEF[phaseIdx].label} phase · Week ${wi+1} of 44</div>
+      </div>
+      <span style="background:${wColor};color:${wTextColor};border-radius:20px;padding:4px 12px;font-size:10px;font-weight:800;letter-spacing:0.06em;text-transform:uppercase">${isRec?"Recovery":"Build"}</span>
+    </div>`;
+
+  document.getElementById("plan-days").innerHTML=week.days.map((d,i)=>{
+    const c=TYPE[d.type], log=getLog(wi,i);
+    const isRest=d.type==="rest";
+    return `<div class="day-card" id="day-card-${i}" style="background:${c.bg};border-color:${c.color}${isRest?"22":"55"};opacity:${isRest?"0.55":"1"}" onclick="toggleDay(${i},${wi})">
+      <div class="day-card-row">
+        <div class="day-icon-circle" style="background:${c.color}22;border:1px solid ${c.color}33">${c.icon}</div>
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px">
+            <span class="day-name">${d.day}</span>
+            <span class="day-label-text" style="color:${c.color};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${d.label}</span>
+          </div>
+          ${d.type!=="rest"?`<div style="display:flex;gap:3px">${dotsHtml(d.effort)}</div>`:""}
+        </div>
+        <div class="day-card-right">
+          ${log?.completed?`<span style="font-size:13px;color:${c.color}">✓</span>`:""}
+          <span class="badge" style="color:${c.color};border-color:${c.color}44;background:${c.color}11;font-size:9px">${c.label}</span>
+          <span class="chevron" id="chev-${i}">▼</span>
+        </div>
+      </div>
+      <div class="expanded" id="exp-${i}">
+        <div class="expanded-detail">${d.detail}</div>
+        ${d.targetDistance?`<div class="target-text">🎯 Target: ${d.targetDistance} km</div>`:""}
+        ${!isRest?`<button class="log-link" style="color:${c.color};border-color:${c.color}55" onclick="event.stopPropagation();openLog(${wi},${i})">${log?.completed?"✓ View / Edit Log":"Log this workout →"}</button>`:""}
+      </div>
+    </div>`;
+  }).join("");
+}
+
+let logState={wi:0,di:0,session:null,feeling:2,loggedType:null,isReadOnly:false,cn:0};
+
+function buildLogForm(session, log, isReadOnly) {
+  const isRest = session.type==="rest";
+  if(isRest) {
+    return `<div class="rest-msg"><div class="rest-emoji">&#128716;</div><div class="rest-title">Rest Day</div><div class="rest-sub">Recovery is part of the plan. Enjoy the downtime!</div></div>
+    <button class="save-btn" style="background:#2d1a6e;color:var(--accent-light)" onclick="saveLog()">Mark as Rested ✓</button>`;
+  }
+  const currentType = logState.loggedType;
+  const isBrick = currentType==="brick";
+  const feelingsHtml = FEELINGS.map((f,i)=>`<button class="feeling-btn${logState.feeling===i?" selected":""}" onclick="selectFeeling(${i})">${f}</button>`).join("");
+  const typePickerHtml = `<div class="input-group">
+    <label class="input-label">Workout type</label>
+    <div style="display:flex;gap:6px;flex-wrap:wrap">
+      ${Object.entries(TYPE).filter(([k])=>k!=="rest").map(([k,v])=>`<button onclick="switchLogType('${k}')" style="flex:1;min-width:60px;padding:8px 4px;border-radius:10px;border:1.5px solid ${currentType===k?v.color:"var(--border)"};background:${currentType===k?(v.color+"22"):"var(--card)"};color:${currentType===k?v.color:"var(--dim)"};font-size:11px;font-weight:800;cursor:pointer;font-family:inherit">${v.icon} ${v.label}</button>`).join("")}
+    </div>
+  </div>`;
+  const distanceHtml = isBrick
+    ? `<div class="input-row"><div class="input-group"><label class="input-label">Bike (km)</label><input type="number" id="bike-dist" placeholder="e.g. 60" value="${log?.bikeDistance||""}" step="0.1" min="0"></div><div class="input-group"><label class="input-label">Run (km)</label><input type="number" id="run-dist" placeholder="e.g. 5" value="${log?.runDistance||""}" step="0.1" min="0"></div></div>`
+    : `<div class="input-group"><label class="input-label">Distance (km)</label><input type="number" id="distance" placeholder="Target: ${session.targetDistance||"--"} km" value="${log?.distance||""}" step="0.1" min="0"></div>`;
+  let html = `<div class="form-section">
+    <div style="font-size:10px;font-weight:800;letter-spacing:2px;color:var(--faint);margin-bottom:16px">LOG YOUR WORKOUT</div>
+    ${typePickerHtml}
+    ${distanceHtml}
+    <div class="input-group"><label class="input-label">Duration (mins)</label><input type="number" id="duration" placeholder="e.g. 45" value="${log?.duration||""}" min="0"></div>
+    <div class="input-group"><label class="input-label">How did it feel?</label><div class="feelings">${feelingsHtml}</div></div>
+    <div class="input-group"><label class="input-label">Notes (optional)</label><textarea id="notes" placeholder="How did it go? Anything to remember...">${log?.notes||""}</textarea></div>
+  </div>`;
+  if(isReadOnly) {
+    html += `<div style="margin:16px 20px 0;padding:12px;background:var(--card);border-radius:12px;border:1px solid var(--border);text-align:center;font-size:13px;color:var(--dim)">Past cycle — view only</div>`;
+  } else {
+    html += `<button class="save-btn" style="background:var(--accent);color:#fff" onclick="saveLog()">${log?"Update Log":"Mark Complete"}</button>`;
+  }
+  return html;
+}
+
+function switchLogType(newType) {
+  const dur = document.getElementById("duration")?.value||"";
+  const dist = document.getElementById("distance")?.value||"";
+  const bikeDist = document.getElementById("bike-dist")?.value||"";
+  const runDist = document.getElementById("run-dist")?.value||"";
+  const notes = document.getElementById("notes")?.value||"";
+  const log = getLogs()[logKey(logState.cn, logState.wi, logState.di)] || null;
+  const patchedLog = {...log, duration:dur, distance:dist, bikeDistance:bikeDist, runDistance:runDist, notes};
+  logState.loggedType = newType;
+
+  // Update session card header and screen background to match new type
+  const cfg = TYPE[newType] || TYPE.run;
+  const session = logState.session;
+  const titleChanged = newType !== session.type;
+  const displayTitle = titleChanged ? `${cfg.icon} ${cfg.label}` : session.label;
+  const _ws2 = new Date(getCycleStart()); _ws2.setDate(_ws2.getDate() + logState.wi*7);
+  const _sd2 = new Date(_ws2); _sd2.setDate(_ws2.getDate() + logState.di);
+  const _dateStr2 = _sd2.toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"});
+  const subtitle = titleChanged ? `${session.day} ${_dateStr2} · Wk ${logState.wi+1} · planned: ${session.label}` : `${session.day} ${_dateStr2} · Week ${logState.wi+1}`;
+  document.getElementById("log-session-card").style.cssText=`border-color:${cfg.color};background-color:${cfg.bg}`;
+  document.getElementById("log-session-card").innerHTML=`<span class="session-icon">${cfg.icon}</span><div style="flex:1"><div class="session-title" style="color:${cfg.color}">${displayTitle}</div><div class="session-day">${subtitle}</div></div><span class="badge" style="color:${cfg.color};border-color:${cfg.color}55;background:${cfg.color}22">${cfg.label}</span>`;
+  document.getElementById("log-detail-box").style.borderColor=cfg.color+"44";
+  document.getElementById("log-screen").style.backgroundColor=cfg.bg;
+
+  document.getElementById("log-form").innerHTML = buildLogForm(session, patchedLog, logState.isReadOnly);
+}
+
+function openLog(wi, di, cycleNum) {
+  const cn = (cycleNum !== undefined) ? cycleNum : getCurrentCycle();
+  const isReadOnly = cn !== getCurrentCycle();
+  const session=PLAN.weeks[wi].days[di], cfg=TYPE[session.type];
+  const log = getLogs()[logKey(cn, wi, di)] || null;
+  const savedType = log?.activityType || session.type;
+  logState={wi,di,session,feeling:log?.feeling??2,loggedType:savedType,isReadOnly,cn};
+  document.getElementById("log-session-card").style.cssText=`border-color:${cfg.color};background-color:${cfg.bg}`;
+  const savedCfg = TYPE[savedType] || cfg;
+  const titleChanged = savedType !== session.type;
+  const displayTitle = titleChanged ? `${savedCfg.icon} ${savedCfg.label}` : session.label;
+  // Calculate real calendar date for this session
+  const _ws = new Date(getCycleStart()); _ws.setDate(_ws.getDate() + wi*7);
+  const _sd = new Date(_ws); _sd.setDate(_ws.getDate() + di);
+  const _dateStr = _sd.toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"});
+  const subtitle = titleChanged ? `${session.day} ${_dateStr} · Wk ${wi+1} · planned: ${session.label}` : `${session.day} ${_dateStr} · Week ${wi+1}`;
+  document.getElementById("log-session-card").innerHTML=`<span class="session-icon">${savedCfg.icon}</span><div style="flex:1"><div class="session-title" style="color:${savedCfg.color}">${displayTitle}</div><div class="session-day">${subtitle}</div></div><span class="badge" style="color:${savedCfg.color};border-color:${savedCfg.color}55;background:${savedCfg.color}22">${savedCfg.label}</span>`;
+  document.getElementById("log-detail-box").style.borderColor=savedCfg.color+"44";
+  document.getElementById("log-detail-text").textContent=session.detail;
+  document.getElementById("delete-btn").style.display=(log && !isReadOnly)?"block":"none";
+  document.getElementById("log-form").innerHTML = buildLogForm(session, log, isReadOnly);
+  document.getElementById("log-screen").style.backgroundColor=savedCfg.bg;
+  document.getElementById("log-screen").classList.add("open");
+  document.getElementById("log-screen").scrollTop=0;
+}
+
+function selectFeeling(i) {
+  logState.feeling=i;
+  document.querySelectorAll(".feeling-btn").forEach((b,idx)=>b.classList.toggle("selected",idx===i));
+}
+
+function saveLog() {
+  const {wi,di,session}=logState;
+  const loggedType = logState.loggedType || session.type;
+  const isBrick = loggedType==="brick";
+  setLog(wi,di,{
+    completed:true, activityType:loggedType, feeling:logState.feeling,
+    notes:document.getElementById("notes")?.value||"",
+    duration:document.getElementById("duration")?.value||"",
+    distance:isBrick?null:(document.getElementById("distance")?.value||""),
+    bikeDistance:isBrick?(document.getElementById("bike-dist")?.value||""):null,
+    runDistance:isBrick?(document.getElementById("run-dist")?.value||""):null,
+    completedAt:new Date().toISOString(),
+  });
+  closeLog(); renderToday();
+  if(activePlanWeek===wi) renderPlan(wi);
+}
+
+function deleteLog() {
+  if(confirm("Remove this workout log?")) {
+    removeLogEntry(logState.wi,logState.di);
+    closeLog(); renderToday();
+    if(activePlanWeek===logState.wi) renderPlan(logState.wi);
+  }
+}
+
+function closeLog() { document.getElementById("log-screen").classList.remove("open"); }
+
+// --- HISTORY ---
+
+// --- HISTORY RENDER ---
+function renderHistory() {
+  // Build activity list from all completed logged workouts across all weeks
+  const logs = getLogs();
+  const activities = [];
+
+  Object.entries(logs).forEach(([key, log]) => {
+    if (!log?.completed) return;
+    const m = key.match(/^C(\d+)-(\d+)-(\d+)$/);
+    if (!m) return;
+    const [, cn, wi, di] = m.map(Number);
+    const week = PLAN.weeks[wi];
+    if (!week) return;
+    const day = week.days[di];
+    if (!day || day.type === "rest") return;
+
+    const actType = log.activityType || day.type;
+    const cfg = TYPE[actType] || TYPE.run;
+    const isBrick = actType === "brick";
+
+    // Calculate distance
+    let distKm = 0;
+    if (isBrick) {
+      distKm = parseFloat(log.bikeDistance||0) + parseFloat(log.runDistance||0);
+    } else {
+      distKm = parseFloat(log.distance||0);
+    }
+    const durMins = parseFloat(log.duration||0);
+
+    // Derive a real date from cycle start + week offset + day offset
+    const cycleStartStr = localStorage.getItem("dt_cycle");
+    let date = "—";
+    if (cycleStartStr) {
+      const cycleStart = new Date(cycleStartStr);
+      const totalDays = cn * (PLAN.weeks.length * 7) + wi * 7 + di;
+      const d = new Date(cycleStart);
+      d.setDate(d.getDate() + totalDays);
+      date = d.toISOString().slice(0, 10);
+    }
+
+    activities.push({ key, wi, di, cn, day, log, actType, cfg, distKm, durMins, date });
+  });
+
+  // Sort newest first
+  activities.sort((a, b) => b.date.localeCompare(a.date));
+
+  // Stats
+  let totalKm = 0, totalMins = 0, runKm = 0, bikeKm = 0, swimKm = 0;
+  const typeCounts = {};
+  activities.forEach(a => {
+    totalKm += a.distKm;
+    totalMins += a.durMins;
+    if (a.actType === "run") runKm += a.distKm;
+    if (a.actType === "bike" || a.actType === "brick") bikeKm += parseFloat(a.log?.bikeDistance||a.distKm||0);
+    if (a.actType === "swim") swimKm += a.distKm;
+    typeCounts[a.actType] = (typeCounts[a.actType]||0) + 1;
+  });
+  const hrs = Math.floor(totalMins/60), mins2 = Math.round(totalMins%60);
+
+  document.getElementById("hist-stats").innerHTML = activities.length === 0
+    ? `<div class="stat-card" style="grid-column:1/-1;text-align:center;padding:24px">
+        <div style="font-size:32px;margin-bottom:8px">🏊🚴🏃</div>
+        <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:4px">No workouts logged yet</div>
+        <div style="font-size:12px;color:var(--dim)">Head to Today or Plan to log your first session</div>
+      </div>`
+    : `<div class="stat-card">
+        <div class="stat-value">${activities.length}</div>
+        <div class="stat-label">Workouts</div>
+        <div class="stat-sub">logged in app</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">${totalKm.toFixed(0)}<span style="font-size:16px;font-weight:600;color:var(--dim)"> km</span></div>
+        <div class="stat-label">Distance</div>
+        <div class="stat-sub">Run ${runKm.toFixed(0)} · Bike ${bikeKm.toFixed(0)}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">${hrs}<span style="font-size:16px;font-weight:600;color:var(--dim)">h</span> ${mins2}<span style="font-size:16px;font-weight:600;color:var(--dim)">m</span></div>
+        <div class="stat-label">Total Time</div>
+        <div class="stat-sub">all sessions</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">${swimKm > 0 ? swimKm.toFixed(1) : "—"}<span style="font-size:16px;font-weight:600;color:var(--dim)">${swimKm > 0 ? " km" : ""}</span></div>
+        <div class="stat-label">Swim distance</div>
+        <div class="stat-sub">total in water</div>
+      </div>`;
+
+  // Type breakdown bar
+  const topTypes = Object.entries(typeCounts).sort((a,b)=>b[1]-a[1]).slice(0,4);
+  document.getElementById("hist-type-bar").innerHTML = topTypes.map(([t, count]) => {
+    const c = TYPE[t] || TYPE.run;
+    return `<div class="type-stat" style="border-color:${c.color}44">
+      <div class="type-stat-icon">${c.icon}</div>
+      <div class="type-stat-val" style="color:${c.color}">${count}</div>
+      <div class="type-stat-lbl">${c.label}</div>
+    </div>`;
+  }).join("");
+
+  if (activities.length === 0) {
+    document.getElementById("hist-month-list").innerHTML = "";
+    return;
+  }
+
+  // Group by month
+  const byMonth = {};
+  activities.forEach(a => {
+    const month = a.date.slice(0, 7);
+    if (!byMonth[month]) byMonth[month] = [];
+    byMonth[month].push(a);
+  });
+
+  const months = Object.keys(byMonth).sort((a,b) => b.localeCompare(a));
+  const fmtDate = d => { try { return new Date(d+"T12:00:00").toLocaleDateString("en-GB",{weekday:"short",day:"numeric",month:"short"}); } catch(e) { return d; }};
+  const fmtMonth = m => { try { return new Date(m+"-01T12:00:00").toLocaleDateString("en-GB",{month:"long",year:"numeric"}); } catch(e) { return m; }};
+  const FEELINGS = ["😴 Tough","😐 OK","🙂 Good","😄 Great","🔥 Crushed it"];
+
+  let html = "";
+  months.forEach(month => {
+    const acts = byMonth[month];
+    const monthKm = acts.reduce((s,a)=>s+a.distKm,0);
+    html += `<div style="margin-bottom:24px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <div class="section-title" style="margin-bottom:0">${fmtMonth(month)}</div>
+        <div style="font-size:11px;color:var(--dim)">${acts.length} sessions · ${monthKm.toFixed(0)} km</div>
+      </div>`;
+
+    acts.forEach(a => {
+      const { cfg, distKm, durMins, date, actType, log } = a;
+      const isBrick = actType === "brick";
+      const h = Math.floor(durMins/60), mm = Math.round(durMins%60);
+      const durStr = durMins > 0 ? (h > 0 ? `${h}h ${mm}m` : `${Math.round(durMins)}m`) : "—";
+      const distStr = distKm > 0.05 ? `${distKm.toFixed(1)} km` : "—";
+      const feeling = a.feeling !== undefined ? FEELINGS[a.feeling] : "";
+      const metaParts = [fmtDate(date)];
+      if (isBrick && log) metaParts.push(`Bike ${parseFloat(log.bikeDistance||0).toFixed(1)}km · Run ${parseFloat(log.runDistance||0).toFixed(1)}km`);
+      metaParts.push(`Week ${a.wi+1}`);
+
+      html += `<div class="hist-entry" onclick="openLog(${a.wi},${a.di},${a.cn})">
+        <div class="hist-icon" style="background:${cfg.color}22;border-radius:10px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">${cfg.icon}</div>
+        <div class="hist-main">
+          <div class="hist-label">${a.label}</div>
+          <div class="hist-meta">${metaParts.join(" · ")}</div>
+          ${feeling ? `<div style="font-size:11px;margin-top:2px">${feeling}</div>` : ""}
+          ${a.notes ? `<div style="font-size:11px;color:var(--faint);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${a.notes}</div>` : ""}
+        </div>
+        <div class="hist-right">
+          <div class="hist-dist" style="color:${cfg.color}">${distStr}</div>
+          <div class="hist-dur">${durStr}</div>
+        </div>
+      </div>`;
+    });
+
+    html += `</div>`;
+  });
+
+  document.getElementById("hist-month-list").innerHTML = html;
+  setTimeout(renderChart, 60);
+
+}
+
+
+// --- Init ---
+function appInit() {
+  // Attach tab bar via event delegation — no inline onclick needed
+  const tabbar = document.getElementById('tabbar');
+  if (tabbar) {
+    tabbar.addEventListener('click', e => {
+      const btn = e.target.closest('[data-tab]');
+      if (!btn) return;
+      showTab(btn.dataset.tab, btn);
+    });
+  }
+
+  // Attach all other delegated handlers
+  attachDelegatedHandlers();
+
+  setTimeout(supaSync, 300);
+  renderToday();
+  renderPlan(0);
+}
+
+function attachDelegatedHandlers() {
+  // Single document-level handler for all static data-action elements
+  document.addEventListener('click', e => {
+    const el = e.target.closest('[data-action]');
+    if (!el) return;
+    const action = el.dataset.action;
+    const val = el.dataset.val;
+
+    if (action === 'supaSync')       { supaSync(); }
+    else if (action === 'closeLog')  { closeLog(); }
+    else if (action === 'deleteLog') { deleteLog(); }
+    else if (action === 'chartMetric')  { setChartMetric(val, el); }
+    else if (action === 'chartRange')   { setChartRange(val, el); }
+    else if (action === 'toggleNotif')  { toggleNotifications(); }
+    else if (action === 'toggleSkipRest') { toggleSkipRest(); }
+    else if (action === 'sendTestNotif')  { sendTestNotif(); }
+    else if (action === 'showPlanStart')  { showChangePlanStart(); }
+    else if (action === 'savePlanStart')  { savePlanStart(); }
+    else if (action === 'hidePlanStart')  { document.getElementById('plan-start-picker').style.display='none'; }
+    else if (action === 'exportLogs')     { exportLogs(); }
+    else if (action === 'fuelUnit')       { fuelSetUnit(val); }
+    else if (action === 'fuelIntensity')  { fuelSetIntensity(el); }
+    else if (action === 'fuelCond')       { fuelSetCond(el); }
+    else if (action === 'fuelCalc')       { fuelCalc(); }
+    else if (action === 'saveNotifTime')  { saveNotifTime(); }
+  });
+
+  // Range sliders need 'input' event not 'click'
+  document.addEventListener('input', e => {
+    const el = e.target.closest('[data-action]');
+    if (!el) return;
+    const action = el.dataset.action;
+    if (action === 'fuelCalc') fuelCalc();
+    else if (action === 'saveNotifTime') saveNotifTime();
+  });
+
+  // Date/time inputs need 'change' event
+  document.addEventListener('change', e => {
+    const el = e.target.closest('[data-action]');
+    if (!el) return;
+    if (el.dataset.action === 'saveNotifTime') saveNotifTime();
+  });
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', appInit);
+} else {
+  appInit();
+}
