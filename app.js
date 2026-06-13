@@ -1870,8 +1870,7 @@ function handleStravaCsv(event) {
         const rawDate = cols[iDate]?.trim() || "";
         const rawType = iType >= 0 ? (cols[iType]?.trim() || "") : "";
         const name    = iName >= 0 ? (cols[iName]?.trim() || "Strava Activity") : "Strava Activity";
-        // Distance column 6 is already in km
-        const distKm  = iDist >= 0 ? (parseFloat(cols[iDist]?.trim() || "0") || 0) : 0;
+        const rawDist = iDist >= 0 ? (parseFloat(cols[iDist]?.trim() || "0") || 0) : 0;
         // Moving Time is in seconds
         const durMins = iTime >= 0 ? ((parseFloat(cols[iTime]?.trim() || "0") || 0) / 60) : 0;
         const elevM   = iElev >= 0 ? (parseFloat(cols[iElev]?.trim() || "0") || 0) : 0;
@@ -1881,7 +1880,10 @@ function handleStravaCsv(event) {
         if (!date) continue;
 
         const type = normaliseStravaType(rawType);
-        if (!type) continue; // skip activities we don't track (walks, etc.)
+        if (!type) continue; // skip walks, yoga, weighttraining etc.
+
+        // Strava exports swim distance in metres, run/ride already in km
+        const distKm = type === "swim" ? rawDist / 1000 : rawDist;
 
         activities.push({
           id: idRaw,
