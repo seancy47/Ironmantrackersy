@@ -1170,7 +1170,6 @@ function renderHistory() {
 
 // --- Init ---
 function appInit() {
-  // Attach tab bar via event delegation — no inline onclick needed
   const tabbar = document.getElementById('tabbar');
   if (tabbar) {
     tabbar.addEventListener('click', e => {
@@ -1180,9 +1179,8 @@ function appInit() {
     });
   }
 
-  // Attach all other delegated handlers
   attachDelegatedHandlers();
-
+  renderStravaImportBar(); // populate immediately so it's ready when History tab opens
   setTimeout(supaSync, 300);
   renderToday();
   renderPlan(0);
